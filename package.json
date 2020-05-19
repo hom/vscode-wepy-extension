@@ -92,7 +92,7 @@
         "extensions": [
           ".wpy"
         ],
-        "configuration": "./languages/vue-language-configuration.json"
+        "configuration": "./languages/wepy-language-configuration.json"
       },
       {
         "id": "vue",
@@ -123,6 +123,33 @@
       }
     ],
     "grammars": [
+      {
+        "language": "wepy",
+        "scopeName": "source.wpy",
+        "path": "./syntaxes/wepy-generated.json",
+        "embeddedLanguages": {
+          "text.html.basic": "html",
+          "text.html.vue-html": "vue-html",
+          "text.jade.slm": "slm",
+          "text.pug": "jade",
+          "text.haml": "haml",
+          "text.html.liquid": "liquid",
+          "source.css": "css",
+          "source.css.scss": "scss",
+          "source.css.less": "less",
+          "source.css.postcss": "vue-postcss",
+          "source.sass": "sass",
+          "source.stylus": "stylus",
+          "source.js": "javascript",
+          "source.ts": "typescript",
+          "source.coffee": "coffeescript",
+          "text.html.markdown": "md",
+          "source.yaml": "yaml",
+          "source.json": "json",
+          "source.php": "php",
+          "source.graphql": "graphql"
+        }
+      },
       {
         "language": "vue",
         "scopeName": "source.vue",
