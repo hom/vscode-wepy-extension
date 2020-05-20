@@ -35,6 +35,8 @@ Wepy tooling for VS Code, powered by [Vetur](https://github.com/vuejs/vetur).
 ## Add
 
 - `config` and `wxs` block syntax-highlighting
+- `config` block highlighting with `json` style
+- `wxs` block highlighting with `javascript` style
 
 ## Power thanks
 

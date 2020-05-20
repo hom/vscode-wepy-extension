@@ -4,7 +4,7 @@
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
   "icon": "asset/wepy.png",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "mengj",
   "scripts": {
     "build:grammar": "tsc -p . && node dist/scripts/build_grammar",
@@ -84,7 +84,7 @@
     ],
     "languages": [
       {
-        "id": "wepy",
+        "id": "vue",
         "aliases": [
           "Wepy",
           "wepy"
@@ -92,7 +92,7 @@
         "extensions": [
           ".wpy"
         ],
-        "configuration": "./languages/wepy-language-configuration.json"
+        "configuration": "./languages/vue-language-configuration.json"
       },
       {
         "id": "vue-html",
@@ -113,9 +113,9 @@
     ],
     "grammars": [
       {
-        "language": "wepy",
-        "scopeName": "source.wpy",
-        "path": "./syntaxes/wepy-generated.json",
+        "language": "vue",
+        "scopeName": "source.vue",
+        "path": "./syntaxes/vue-generated.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
           "text.html.vue-html": "vue-html",
