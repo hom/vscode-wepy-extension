@@ -804,7 +804,7 @@
       ]
     },
     {
-      "begin": "(<)(wxs)(?![^/>]*/>\\s*$)",
+      "begin": "(<)(wxs)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.tag.begin.html"
@@ -847,7 +847,7 @@
       ]
     },
     {
-      "begin": "(<)(config)(>))",
+      "begin": "(<)(config)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.tag.begin.html"

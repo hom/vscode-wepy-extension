@@ -4,8 +4,9 @@
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
   "icon": "asset/wepy.png",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "publisher": "mengj",
+  "preview": true,
   "scripts": {
     "build:grammar": "tsc -p . && node dist/scripts/build_grammar",
     "compile": "run-s compile:source copy:snippets",
@@ -25,10 +26,7 @@
     "prepare-publish": "./build/release-cleanup.sh"
   },
   "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npm run test:server"
-    }
+    "hooks": {}
   },
   "lint-staged": {
     "*.ts": [
@@ -114,7 +112,7 @@
     "grammars": [
       {
         "language": "wepy",
-        "scopeName": "source.wepy",
+        "scopeName": "source.wpy",
         "path": "./syntaxes/wepy-generated.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
@@ -178,7 +176,7 @@
       }
     ],
     "configuration": {
-      "title": "Vetur",
+      "title": "Wepy",
       "properties": {
         "vetur.useWorkspaceDependencies": {
           "type": "boolean",

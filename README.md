@@ -38,6 +38,10 @@ Wepy tooling for VS Code, powered by [Vetur](https://github.com/vuejs/vetur).
 - `config` block highlighting with `json` style
 - `wxs` block highlighting with `javascript` style
 
+## TODO
+
+> There are also some bugs and unsupport attributes, and I will support soon.
+
 ## Power thanks
 
 - [Vetur](https://github.com/vuejs/vetur)

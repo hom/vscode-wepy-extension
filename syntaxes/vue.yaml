@@ -382,8 +382,9 @@ patterns:
         end: (?=</script>)
         patterns:
           - include: source.js
-  # wxs
-  - begin: (<)(wxs)(?![^/>]*/>\s*$)
+
+    # wxs
+  - begin: (<)(wxs)
     beginCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
       '2': { name: entity.name.tag.script.html }
@@ -401,8 +402,9 @@ patterns:
         end: (?=</wxs>)
         patterns:
           - include: source.js
+
   # config
-  - begin: (<)(config)(>))
+  - begin: (<)(config)
     beginCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
       '2': { name: entity.name.tag.script.html }
