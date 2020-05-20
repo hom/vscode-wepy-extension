@@ -4,7 +4,7 @@
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
   "icon": "asset/wepy.png",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "mengj",
   "scripts": {
     "build:grammar": "tsc -p . && node dist/scripts/build_grammar",
@@ -40,7 +40,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:hom/wepy-extension.git"
+    "url": "https://github.com/hom/wepy-extension.git"
   },
   "keywords": [
     "vetur",
