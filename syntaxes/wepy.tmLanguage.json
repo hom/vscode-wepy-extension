@@ -1,8 +1,8 @@
 {
-  "name": "Vue Component",
-  "scopeName": "source.vue",
+  "name": "Wepy Component",
+  "scopeName": "source.wpy",
   "fileTypes": [
-    "vue"
+    "wpy"
   ],
   "uuid": "5512c10d-4cc5-434c-b8fc-53b912f55ab3",
   "patterns": [
@@ -798,6 +798,92 @@
           "patterns": [
             {
               "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "begin": "(<)(wxs)(?![^/>]*/>\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        }
+      },
+      "end": "(</)(wxs)(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#tag-stuff"
+        },
+        {
+          "contentName": "source.js",
+          "begin": "(>)",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "end": "(?=</wxs>)",
+          "patterns": [
+            {
+              "include": "source.js"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "begin": "(<)(config)(?![^/>]*/>\\s*$)",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        }
+      },
+      "end": "(</)(config)(>)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.definition.tag.begin.html"
+        },
+        "2": {
+          "name": "entity.name.tag.script.html"
+        },
+        "3": {
+          "name": "punctuation.definition.tag.end.html"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#tag-stuff"
+        },
+        {
+          "contentName": "source.json",
+          "begin": "(>)",
+          "beginCaptures": {
+            "1": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "end": "(?=</config>)",
+          "patterns": [
+            {
+              "include": "source.json"
             }
           ]
         }

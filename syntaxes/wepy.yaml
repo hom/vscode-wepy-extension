@@ -382,6 +382,44 @@ patterns:
         end: (?=</script>)
         patterns:
           - include: source.js
+  # wxs
+  - begin: (<)(wxs)(?![^/>]*/>\s*$)
+    beginCaptures:
+      '1': { name: punctuation.definition.tag.begin.html }
+      '2': { name: entity.name.tag.script.html }
+    end: (</)(wxs)(>)
+    endCaptures:
+      '1': { name: punctuation.definition.tag.begin.html }
+      '2': { name: entity.name.tag.script.html }
+      '3': { name: punctuation.definition.tag.end.html }
+    patterns:
+      - include: '#tag-stuff'
+      - contentName: source.js
+        begin: (>)
+        beginCaptures:
+          '1': { name: punctuation.definition.tag.end.html }
+        end: (?=</wxs>)
+        patterns:
+          - include: source.js
+  # config
+  - begin: (<)(config)(?![^/>]*/>\s*$)
+    beginCaptures:
+      '1': { name: punctuation.definition.tag.begin.html }
+      '2': { name: entity.name.tag.script.html }
+    end: (</)(config)(>)
+    endCaptures:
+      '1': { name: punctuation.definition.tag.begin.html }
+      '2': { name: entity.name.tag.script.html }
+      '3': { name: punctuation.definition.tag.end.html }
+    patterns:
+      - include: '#tag-stuff'
+      - contentName: source.json
+        begin: (>)
+        beginCaptures:
+          '1': { name: punctuation.definition.tag.end.html }
+        end: (?=</config>)
+        patterns:
+          - include: source.json
 
 # Repository
 repository:
