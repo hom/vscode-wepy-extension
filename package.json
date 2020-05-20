@@ -3,7 +3,7 @@
   "displayName": "Wepy",
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
-  "icon": "asset/vue.png",
+  "icon": "asset/wepy.png",
   "version": "0.0.1",
   "publisher": "mengj",
   "scripts": {
