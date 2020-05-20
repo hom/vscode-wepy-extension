@@ -59,7 +59,7 @@
     "vscode-languageserver-types": "^3.15.0-next.9"
   },
   "activationEvents": [
-    "onLanguage:vue"
+    "onLanguage:wpy"
   ],
   "main": "./dist/client/vueMain",
   "contributes": {
@@ -95,17 +95,6 @@
         "configuration": "./languages/wepy-language-configuration.json"
       },
       {
-        "id": "vue",
-        "aliases": [
-          "Vue",
-          "vue"
-        ],
-        "extensions": [
-          ".vue"
-        ],
-        "configuration": "./languages/vue-language-configuration.json"
-      },
-      {
         "id": "vue-html",
         "aliases": [
           "Vue-html"
@@ -127,33 +116,6 @@
         "language": "wepy",
         "scopeName": "source.wpy",
         "path": "./syntaxes/wepy-generated.json",
-        "embeddedLanguages": {
-          "text.html.basic": "html",
-          "text.html.vue-html": "vue-html",
-          "text.jade.slm": "slm",
-          "text.pug": "jade",
-          "text.haml": "haml",
-          "text.html.liquid": "liquid",
-          "source.css": "css",
-          "source.css.scss": "scss",
-          "source.css.less": "less",
-          "source.css.postcss": "vue-postcss",
-          "source.sass": "sass",
-          "source.stylus": "stylus",
-          "source.js": "javascript",
-          "source.ts": "typescript",
-          "source.coffee": "coffeescript",
-          "text.html.markdown": "md",
-          "source.yaml": "yaml",
-          "source.json": "json",
-          "source.php": "php",
-          "source.graphql": "graphql"
-        }
-      },
-      {
-        "language": "vue",
-        "scopeName": "source.vue",
-        "path": "./syntaxes/vue-generated.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
           "text.html.vue-html": "vue-html",
