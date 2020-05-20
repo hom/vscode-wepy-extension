@@ -84,7 +84,7 @@
     ],
     "languages": [
       {
-        "id": "vue",
+        "id": "wepy",
         "aliases": [
           "Wepy",
           "wepy"
@@ -92,7 +92,7 @@
         "extensions": [
           ".wpy"
         ],
-        "configuration": "./languages/vue-language-configuration.json"
+        "configuration": "./languages/wepy-language-configuration.json"
       },
       {
         "id": "vue-html",
@@ -113,9 +113,9 @@
     ],
     "grammars": [
       {
-        "language": "vue",
-        "scopeName": "source.vue",
-        "path": "./syntaxes/vue-generated.json",
+        "language": "wepy",
+        "scopeName": "source.wepy",
+        "path": "./syntaxes/wepy-generated.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
           "text.html.vue-html": "vue-html",

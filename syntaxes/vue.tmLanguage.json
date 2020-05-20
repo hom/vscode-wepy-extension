@@ -847,7 +847,7 @@
       ]
     },
     {
-      "begin": "(<)(config)(?![^/>]*/>\\s*$)",
+      "begin": "(<)(config)(>))",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.tag.begin.html"

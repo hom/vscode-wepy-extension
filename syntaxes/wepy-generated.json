@@ -1,8 +1,8 @@
 {
-  "name": "Vue Component",
-  "scopeName": "source.vue",
+  "name": "Wepy Component",
+  "scopeName": "source.wpy",
   "fileTypes": [
-    "vue"
+    "wpy"
   ],
   "uuid": "5512c10d-4cc5-434c-b8fc-53b912f55ab3",
   "patterns": [
