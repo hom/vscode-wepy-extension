@@ -22,9 +22,9 @@ export async function registerVeturTextDocumentProviders() {
 
 export function generateShowVirtualFileCommand(client: LanguageClient) {
   return async () => {
-    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document.fileName.endsWith('.vue')) {
+    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document.fileName.endsWith('.wpy')) {
       return vscode.window.showInformationMessage(
-        'Failed to show virtual file. Make sure the current file is a .vue file.'
+        'Failed to show virtual file. Make sure the current file is a .wpy file.'
       );
     }
 

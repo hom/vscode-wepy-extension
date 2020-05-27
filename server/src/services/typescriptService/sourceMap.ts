@@ -49,12 +49,12 @@ export interface TemplateSourceMap {
  *   from: {
  *     start: 0,
  *     end: 8
- *     filename: 'foo.vue'
+ *     filename: 'foo.wpy'
  *   },
  *   to: {
  *     start: 0,
  *     end: 18
- *     filename: 'foo.vue.template'
+ *     filename: 'foo.wpy.template'
  *   },
  *   offsetMapping: {
  *     0: 5,
@@ -175,7 +175,7 @@ function canIncludeTrivia(tsModule: T_TypeScript, node: ts.Node): boolean {
 }
 
 /**
- * Map a range from actual `.vue` file to `.vue.template` file
+ * Map a range from actual `.wpy` file to `.wpy.template` file
  */
 export function mapFromPositionToOffset(
   document: TextDocument,
@@ -188,7 +188,7 @@ export function mapFromPositionToOffset(
 }
 
 /**
- * Map an offset from actual `.vue` file to `.vue.template` file
+ * Map an offset from actual `.wpy` file to `.wpy.template` file
  */
 function mapFromOffsetToOffset(document: TextDocument, offset: number, sourceMap: TemplateSourceMap): number {
   const filePath = getFileFsPath(document.uri);
@@ -207,7 +207,7 @@ function mapFromOffsetToOffset(document: TextDocument, offset: number, sourceMap
 }
 
 /**
- * Map a range from actual `.vue` file to `.vue.template` file
+ * Map a range from actual `.wpy` file to `.wpy.template` file
  */
 export function mapToRange(toDocument: TextDocument, from: ts.TextSpan, sourceMap: TemplateSourceMap): Range {
   const filePath = getFileFsPath(toDocument.uri);
@@ -231,7 +231,7 @@ export function mapToRange(toDocument: TextDocument, from: ts.TextSpan, sourceMa
 }
 
 /**
- * Map a range from virtual `.vue.template` file back to original `.vue` file
+ * Map a range from virtual `.wpy.template` file back to original `.wpy` file
  */
 export function mapBackRange(fromDocumnet: TextDocument, to: ts.TextSpan, sourceMap: TemplateSourceMap): Range {
   const filePath = getFileFsPath(fromDocumnet.uri);

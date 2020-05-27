@@ -133,7 +133,7 @@ export function getServiceHost(
     const filePath = getFilePath(doc.uri);
     // When file is not in language service, add it
     if (!localScriptRegionDocuments.has(fileFsPath)) {
-      if (fileFsPath.endsWith('.vue') || fileFsPath.endsWith('.vue.template')) {
+      if (fileFsPath.endsWith('.wpy') || fileFsPath.endsWith('.wpy.template')) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -155,7 +155,7 @@ export function getServiceHost(
     const filePath = getFilePath(doc.uri);
     // When file is not in language service, add it
     if (!localScriptRegionDocuments.has(fileFsPath)) {
-      if (fileFsPath.endsWith('.vue') || fileFsPath.endsWith('.vue.template')) {
+      if (fileFsPath.endsWith('.wpy') || fileFsPath.endsWith('.wpy.template')) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -245,13 +245,13 @@ export function getServiceHost(
         include?: ReadonlyArray<string>,
         depth?: number
       ): string[] {
-        const allExtensions = extensions ? extensions.concat(['.vue']) : extensions;
+        const allExtensions = extensions ? extensions.concat(['.wpy']) : extensions;
         return vueSys.readDirectory(path, allExtensions, exclude, include, depth);
       },
 
       resolveModuleNames(moduleNames: string[], containingFile: string): (ts.ResolvedModule | undefined)[] {
         // in the normal case, delegate to ts.resolveModuleName
-        // in the relative-imported.vue case, manually build a resolved filename
+        // in the relative-imported.wpy case, manually build a resolved filename
         const result: (ts.ResolvedModule | undefined)[] = moduleNames.map(name => {
           if (name === bridge.moduleName) {
             return {
@@ -280,7 +280,7 @@ export function getServiceHost(
             return undefined;
           }
 
-          if (tsResolvedModule.resolvedFileName.endsWith('.vue.ts')) {
+          if (tsResolvedModule.resolvedFileName.endsWith('.wpy.ts')) {
             const resolvedFileName = tsResolvedModule.resolvedFileName.slice(0, -'.ts'.length);
             const uri = Uri.file(resolvedFileName);
             const resolvedFileFsPath = normalizeFileNameToFsPath(resolvedFileName);
@@ -344,7 +344,7 @@ export function getServiceHost(
 
         const fileFsPath = normalizeFileNameToFsPath(fileName);
 
-        // .vue.template files are handled in pre-process phase
+        // .wpy.template files are handled in pre-process phase
         if (isVirtualVueTemplateFile(fileFsPath)) {
           const doc = localScriptRegionDocuments.get(fileFsPath);
           const fileText = doc ? doc.getText() : '';
@@ -377,7 +377,7 @@ export function getServiceHost(
           fileText = doc.getText();
         } else {
           // Note: This is required in addition to the parsing in embeddedSupport because
-          // this works for .vue files that aren't even loaded by VS Code yet.
+          // this works for .wpy files that aren't even loaded by VS Code yet.
           const rawVueFileText = tsModule.sys.readFile(fileFsPath) || '';
           fileText = parseVueScript(rawVueFileText);
         }
@@ -486,7 +486,7 @@ function inferVueVersion(tsModule: T_TypeScript, workspacePath: string): VueVers
   const packageJSONPath = tsModule.findConfigFile(workspacePath, tsModule.sys.fileExists, 'package.json');
   try {
     const packageJSON = packageJSONPath && JSON.parse(tsModule.sys.readFile(packageJSONPath)!);
-    const vueDependencyVersion = packageJSON.dependencies.vue || packageJSON.devDependencies.vue;
+    const vueDependencyVersion = packageJSON.dependencies.wpy || packageJSON.devDependencies.wpy;
 
     if (vueDependencyVersion) {
       // use a sloppy method to infer version, to reduce dep on semver or so

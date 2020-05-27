@@ -185,9 +185,9 @@ export async function getJavascriptMode(
               detail: entry.name + entry.kindModifiers
             };
           } else {
-            if (entry.name.endsWith('.vue')) {
+            if (entry.name.endsWith('.wpy')) {
               return {
-                label: entry.name.slice(0, -'.vue'.length),
+                label: entry.name.slice(0, -'.wpy'.length),
                 detail: entry.name
               };
             }

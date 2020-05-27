@@ -19,20 +19,20 @@ import { isVirtualVueTemplateFile, isVueFile } from './util';
 const importedComponentName = '__vlsComponent';
 
 export function parseVueScript(text: string): string {
-  const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
+  const doc = TextDocument.create('test://test/test.wpy', 'vue', 0, text);
   const regions = getVueDocumentRegions(doc);
   const script = regions.getSingleTypeDocument('script');
   return script.getText() || 'export default {};';
 }
 
 function parseVueScriptSrc(text: string): string | undefined {
-  const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
+  const doc = TextDocument.create('test://test/test.wpy', 'vue', 0, text);
   const regions = getVueDocumentRegions(doc);
   return regions.getImportedScripts()[0];
 }
 
 export function parseVueTemplate(text: string): string {
-  const doc = TextDocument.create('test://test/test.vue', 'vue', 0, text);
+  const doc = TextDocument.create('test://test/test.wpy', 'vue', 0, text);
   const regions = getVueDocumentRegions(doc);
   const template = regions.getSingleTypeDocument('template');
 
@@ -217,7 +217,7 @@ export function injectVueTemplate(
     // We need to strip `.ts` suffix to avoid a compilation error.
     componentFilePath = scriptSrc.replace(/\.ts$/, '');
   } else {
-    // Importing original `.vue` file will get component type when the script is written by inline.
+    // Importing original `.wpy` file will get component type when the script is written by inline.
     componentFilePath = './' + path.basename(sourceFile.fileName.slice(0, -'.template'.length));
   }
 

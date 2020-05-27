@@ -4,7 +4,7 @@
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
   "icon": "asset/wepy.png",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "mengj",
   "preview": true,
   "scripts": {
@@ -26,7 +26,10 @@
     "prepare-publish": "./build/release-cleanup.sh"
   },
   "husky": {
-    "hooks": {}
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm run test:server"
+    }
   },
   "lint-staged": {
     "*.ts": [
@@ -38,13 +41,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hom/wepy-extension.git"
+    "url": "https://github.com/vuejs/vetur.git"
   },
   "keywords": [
     "vetur",
-    "Wepy",
-    "wepy",
-    "wpy"
+    "Vue",
+    "vue",
+    "vuejs"
   ],
   "categories": [
     "Programming Languages"
@@ -57,7 +60,7 @@
     "vscode-languageserver-types": "^3.15.0-next.9"
   },
   "activationEvents": [
-    "onLanguage:wpy"
+    "onLanguage:vue"
   ],
   "main": "./dist/client/vueMain",
   "contributes": {
@@ -82,15 +85,15 @@
     ],
     "languages": [
       {
-        "id": "wepy",
+        "id": "vue",
         "aliases": [
           "Wepy",
-          "wepy"
+          "wpy"
         ],
         "extensions": [
           ".wpy"
         ],
-        "configuration": "./languages/wepy-language-configuration.json"
+        "configuration": "./languages/vue-language-configuration.json"
       },
       {
         "id": "vue-html",
@@ -111,9 +114,9 @@
     ],
     "grammars": [
       {
-        "language": "wepy",
-        "scopeName": "source.wpy",
-        "path": "./syntaxes/wepy-generated.json",
+        "language": "vue",
+        "scopeName": "source.vue",
+        "path": "./syntaxes/vue-generated.json",
         "embeddedLanguages": {
           "text.html.basic": "html",
           "text.html.vue-html": "vue-html",
@@ -176,7 +179,7 @@
       }
     ],
     "configuration": {
-      "title": "Wepy",
+      "title": "Vetur",
       "properties": {
         "vetur.useWorkspaceDependencies": {
           "type": "boolean",
