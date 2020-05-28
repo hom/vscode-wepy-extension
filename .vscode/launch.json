@@ -26,7 +26,7 @@
       "name": "server",
       "type": "node",
       "request": "attach",
-      "port": 6005,
+      "port": 8021,
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
       "protocol": "inspector",

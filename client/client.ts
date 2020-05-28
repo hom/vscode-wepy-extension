@@ -10,7 +10,7 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 
 export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir: string): LanguageClient {
-  const debugOptions = { execArgv: ['--nolazy', '--inspect=6005'] };
+  const debugOptions = { execArgv: ['--nolazy', '--inspect=8021'] };
 
   const documentSelector = ['vue'];
   const config = vscode.workspace.getConfiguration();
