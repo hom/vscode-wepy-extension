@@ -179,7 +179,7 @@
       }
     ],
     "configuration": {
-      "title": "Vetur",
+      "title": "Wepy",
       "properties": {
         "vetur.useWorkspaceDependencies": {
           "type": "boolean",
