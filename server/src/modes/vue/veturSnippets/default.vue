@@ -3,11 +3,20 @@
 </template>
 
 <script>
-export default {
+import wepy from '@wepy/core';
 
-}
+wepy.page({
+
+})
 </script>
 
 <style>
 
 </style>
+
+<config>
+{
+  "navigationStyle": "wepy",
+  "usingComponents": {}
+}
+</config>

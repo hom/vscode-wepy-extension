@@ -82,7 +82,7 @@ function loadAllSnippets(rootDir: string, source: SnippetSource): Snippet[] {
         return;
       }
       const absPath = path.resolve(rootDir, p);
-      if (!absPath.endsWith('.wpy') && fs.existsSync(absPath) && fs.lstatSync(absPath).isDirectory()) {
+      if (!absPath.endsWith('.vue') && fs.existsSync(absPath) && fs.lstatSync(absPath).isDirectory()) {
         const customDirSnippets = loadSnippetsFromDir(absPath, source, 'custom').map(s => {
           return {
             ...s,
@@ -107,7 +107,7 @@ function loadSnippetsFromDir(dir: string, source: SnippetSource, type: SnippetTy
 
   try {
     fs.readdirSync(dir)
-      .filter(p => p.endsWith('.wpy'))
+      .filter(p => p.endsWith('.vue'))
       .forEach(p => {
         snippets.push({
           source,
