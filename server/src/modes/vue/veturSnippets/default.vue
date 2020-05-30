@@ -16,7 +16,7 @@ wepy.page({
 
 <config>
 {
-  "navigationStyle": "wepy",
+  "navigationBarTitleText": "wepy",
   "usingComponents": {}
 }
 </config>
