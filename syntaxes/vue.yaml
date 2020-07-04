@@ -383,14 +383,14 @@ patterns:
         patterns:
           - include: source.js
   # config
-  - begin: (<)(config)
+  - begin: (<)(config)(?![^/>]*/>\s*$)
     beginCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
-      '2': { name: entity.name.tag.script.html }
+      '2': { name: entity.name.tag.config.html }
     end: (</)(config)(>)
     endCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
-      '2': { name: entity.name.tag.script.html }
+      '2': { name: entity.name.tag.config.html }
       '3': { name: punctuation.definition.tag.end.html }
     patterns:
       - include: '#tag-stuff'
@@ -403,14 +403,14 @@ patterns:
           - include: source.json
 
   # wxs
-  - begin: (<)(wxs)
+  - begin: (<)(wxs)(?![^/>]*/>\s*$)
     beginCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
-      '2': { name: entity.name.tag.script.html }
+      '2': { name: entity.name.tag.wxs.html }
     end: (</)(wxs)(>)
     endCaptures:
       '1': { name: punctuation.definition.tag.begin.html }
-      '2': { name: entity.name.tag.script.html }
+      '2': { name: entity.name.tag.wxs.html }
       '3': { name: punctuation.definition.tag.end.html }
     patterns:
       - include: '#tag-stuff'

@@ -4,7 +4,7 @@
   "description": "Wepy tooling for VS Code by using vetur",
   "author": "hom <813935532@qq.com>",
   "icon": "asset/wepy.png",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "mengj",
   "preview": true,
   "scripts": {

@@ -890,13 +890,13 @@
       ]
     },
     {
-      "begin": "(<)(config)",
+      "begin": "(<)(config)(?![^/>]*/>\\s*$)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.tag.begin.html"
         },
         "2": {
-          "name": "entity.name.tag.script.html"
+          "name": "entity.name.tag.config.html"
         }
       },
       "end": "(</)(config)(>)",
@@ -905,7 +905,7 @@
           "name": "punctuation.definition.tag.begin.html"
         },
         "2": {
-          "name": "entity.name.tag.script.html"
+          "name": "entity.name.tag.config.html"
         },
         "3": {
           "name": "punctuation.definition.tag.end.html"
@@ -933,13 +933,13 @@
       ]
     },
     {
-      "begin": "(<)(wxs)",
+      "begin": "(<)(wxs)(?![^/>]*/>\\s*$)",
       "beginCaptures": {
         "1": {
           "name": "punctuation.definition.tag.begin.html"
         },
         "2": {
-          "name": "entity.name.tag.script.html"
+          "name": "entity.name.tag.wxs.html"
         }
       },
       "end": "(</)(wxs)(>)",
@@ -948,7 +948,7 @@
           "name": "punctuation.definition.tag.begin.html"
         },
         "2": {
-          "name": "entity.name.tag.script.html"
+          "name": "entity.name.tag.wxs.html"
         },
         "3": {
           "name": "punctuation.definition.tag.end.html"
