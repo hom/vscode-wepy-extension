@@ -67,7 +67,7 @@ export function getStylusMode(
       return stylusHover(embedded, position);
     },
     format(document, range, formatParams) {
-      if (env.getConfig().vetur.format.defaultFormatter.stylus === 'none') {
+      if (env.getConfig().wepy.format.defaultFormatter.stylus === 'none') {
         return [];
       }
 
@@ -76,7 +76,7 @@ export function getStylusMode(
 
       const inputText = document.getText(range);
 
-      const vlsFormatConfig = env.getConfig().vetur.format as VLSFormatConfig;
+      const vlsFormatConfig = env.getConfig().wepy.format as VLSFormatConfig;
       const tabStopChar = vlsFormatConfig.options.useTabs ? '\t' : ' '.repeat(vlsFormatConfig.options.tabSize);
 
       // Note that this would have been `document.eol` ideally
@@ -91,8 +91,8 @@ export function getStylusMode(
         }
       }
 
-      // Add one more indentation when `vetur.format.styleInitialIndent` is set to `true`
-      if (env.getConfig().vetur.format.scriptInitialIndent) {
+      // Add one more indentation when `wepy.format.styleInitialIndent` is set to `true`
+      if (env.getConfig().wepy.format.scriptInitialIndent) {
         baseIndent += tabStopChar;
       }
 

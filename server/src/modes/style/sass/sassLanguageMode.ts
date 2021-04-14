@@ -37,7 +37,7 @@ export class SassLanguageMode implements LanguageMode {
   }
 
   format(document: TextDocument, range: Range, formattingOptions: FormattingOptions) {
-    if (this.env.getConfig().vetur.format.defaultFormatter.sass === 'sass-formatter') {
+    if (this.env.getConfig().wepy.format.defaultFormatter.sass === 'sass-formatter') {
       return [
         TextEdit.replace(
           range,

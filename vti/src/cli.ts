@@ -12,7 +12,7 @@ function validateLogLevel(logLevelInput: unknown): logLevelInput is LogLevel {
 
 (async () => {
   const program = new Command();
-  program.name('vti').description('Vetur Terminal Interface').version(getVersion());
+  program.name('vti').description('Wepy Terminal Interface').version(getVersion());
 
   program
     .command('diagnostics [workspace]')

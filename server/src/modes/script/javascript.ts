@@ -207,7 +207,7 @@ export async function getJavascriptMode(
           message: tsModule.flattenDiagnosticMessageText(diag.messageText, '\n'),
           tags,
           code: diag.code,
-          source: 'Vetur'
+          source: 'Wepy'
         };
       });
     },
@@ -227,7 +227,7 @@ export async function getJavascriptMode(
         ...getUserPreferences(scriptDoc),
         triggerCharacter: getTsTriggerCharacter(triggerChar),
         includeCompletionsWithInsertText: true,
-        includeCompletionsForModuleExports: env.getConfig().vetur.completion.autoImport
+        includeCompletionsForModuleExports: env.getConfig().wepy.completion.autoImport
       });
       if (!completions) {
         return { isIncomplete: false, items: [] };
@@ -291,9 +291,9 @@ export async function getJavascriptMode(
               detail: entry.name + entry.kindModifiers
             };
           } else {
-            if (entry.name.endsWith('.vue')) {
+            if (entry.name.endsWith('.wpy')) {
               return {
-                label: entry.name.slice(0, -'.vue'.length),
+                label: entry.name.slice(0, -'.wpy'.length),
                 detail: entry.name
               };
             }
@@ -341,7 +341,7 @@ export async function getJavascriptMode(
           }
         }
 
-        if (details.codeActions && env.getConfig().vetur.completion.autoImport) {
+        if (details.codeActions && env.getConfig().wepy.completion.autoImport) {
           const textEdits = convertCodeAction(doc, details.codeActions, firstScriptRegion);
           item.additionalTextEdits = textEdits;
 
@@ -577,7 +577,7 @@ export async function getJavascriptMode(
         const range = convertRange(scriptDoc, s.textSpan);
         const kind = getFoldingRangeKind(s);
 
-        // https://github.com/vuejs/vetur/issues/2303
+        // https://github.com/vuejs/wepy/issues/2303
         const endLine =
           range.end.character > 0 &&
           ['}', ']'].includes(
@@ -687,16 +687,16 @@ export async function getJavascriptMode(
 
       const defaultFormatter =
         scriptDoc.languageId === 'javascript'
-          ? env.getConfig().vetur.format.defaultFormatter.js
-          : env.getConfig().vetur.format.defaultFormatter.ts;
+          ? env.getConfig().wepy.format.defaultFormatter.js
+          : env.getConfig().wepy.format.defaultFormatter.ts;
 
       if (defaultFormatter === 'none') {
         return [];
       }
 
       const parser = scriptDoc.languageId === 'javascript' ? 'babel' : 'typescript';
-      const needInitialIndent = env.getConfig().vetur.format.scriptInitialIndent;
-      const vlsFormatConfig: VLSFormatConfig = env.getConfig().vetur.format;
+      const needInitialIndent = env.getConfig().wepy.format.scriptInitialIndent;
+      const vlsFormatConfig: VLSFormatConfig = env.getConfig().wepy.format;
 
       if (
         defaultFormatter === 'prettier' ||
@@ -1069,9 +1069,9 @@ function convertOptions(
 
 function getFormatCodeSettings(config: any): ts.FormatCodeSettings {
   return {
-    tabSize: config.vetur.format.options.tabSize,
-    indentSize: config.vetur.format.options.tabSize,
-    convertTabsToSpaces: !config.vetur.format.options.useTabs,
+    tabSize: config.wepy.format.options.tabSize,
+    indentSize: config.wepy.format.options.tabSize,
+    convertTabsToSpaces: !config.wepy.format.options.useTabs,
     insertSpaceAfterCommaDelimiter: true
   };
 }

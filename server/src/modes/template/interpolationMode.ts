@@ -51,15 +51,15 @@ export class VueInterpolationMode implements LanguageMode {
   }
 
   private getChildComponents(document: TextDocument) {
-    return this.env.getConfig().vetur.validation.templateProps
+    return this.env.getConfig().wepy.validation.templateProps
       ? this.vueInfoService && this.vueInfoService.getInfo(document)?.componentInfo.childComponents
       : [];
   }
 
   async doValidation(document: TextDocument, cancellationToken?: VCancellationToken): Promise<Diagnostic[]> {
     if (
-      !this.env.getConfig().vetur.experimental.templateInterpolationService ||
-      !this.env.getConfig().vetur.validation.interpolation
+      !this.env.getConfig().wepy.experimental.templateInterpolationService ||
+      !this.env.getConfig().wepy.validation.interpolation
     ) {
       return [];
     }
@@ -103,13 +103,13 @@ export class VueInterpolationMode implements LanguageMode {
         severity: DiagnosticSeverity.Error,
         message: this.tsModule.flattenDiagnosticMessageText(diag.messageText, '\n'),
         code: diag.code,
-        source: 'Vetur'
+        source: 'Wepy'
       };
     });
   }
 
   doComplete(document: TextDocument, position: Position): CompletionList {
-    if (!this.env.getConfig().vetur.experimental.templateInterpolationService) {
+    if (!this.env.getConfig().wepy.experimental.templateInterpolationService) {
       return NULL_COMPLETION;
     }
 
@@ -202,7 +202,7 @@ export class VueInterpolationMode implements LanguageMode {
   }
 
   doResolve(document: TextDocument, item: CompletionItem): CompletionItem {
-    if (!this.env.getConfig().vetur.experimental.templateInterpolationService) {
+    if (!this.env.getConfig().wepy.experimental.templateInterpolationService) {
       return item;
     }
 
@@ -274,7 +274,7 @@ export class VueInterpolationMode implements LanguageMode {
     contents: MarkedString[];
     range?: Range;
   } {
-    if (!this.env.getConfig().vetur.experimental.templateInterpolationService) {
+    if (!this.env.getConfig().wepy.experimental.templateInterpolationService) {
       return { contents: [] };
     }
 
@@ -332,7 +332,7 @@ export class VueInterpolationMode implements LanguageMode {
   }
 
   findDefinition(document: TextDocument, position: Position): Location[] {
-    if (!this.env.getConfig().vetur.experimental.templateInterpolationService) {
+    if (!this.env.getConfig().wepy.experimental.templateInterpolationService) {
       return [];
     }
 
@@ -383,7 +383,7 @@ export class VueInterpolationMode implements LanguageMode {
   }
 
   findReferences(document: TextDocument, position: Position): Location[] {
-    if (!this.env.getConfig().vetur.experimental.templateInterpolationService) {
+    if (!this.env.getConfig().wepy.experimental.templateInterpolationService) {
       return [];
     }
 

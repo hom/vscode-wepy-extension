@@ -10,7 +10,7 @@ const separator = Array(20).fill('=').join('');
 const onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
 
 export async function registerVeturTextDocumentProviders() {
-  return vscode.workspace.registerTextDocumentContentProvider('vetur', {
+  return vscode.workspace.registerTextDocumentContentProvider('wepy', {
     onDidChange: onDidChangeEmitter.event,
     provideTextDocumentContent(uri: vscode.Uri) {
       return buildUpContent();
@@ -28,7 +28,7 @@ export function generateShowVirtualFileCommand(client: LanguageClient) {
 
     const currFileName = vscode.window.activeTextEditor.document.fileName;
     const currFileText = vscode.window.activeTextEditor.document.getText();
-    const uri = vscode.Uri.parse('vetur:' + currFileName);
+    const uri = vscode.Uri.parse('wepy:' + currFileName);
     fileName = currFileName;
 
     const result = await client.sendRequest('$/queryVirtualFileInfo', { fileName, currFileText });

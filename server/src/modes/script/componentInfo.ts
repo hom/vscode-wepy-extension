@@ -45,7 +45,7 @@ export function getComponentInfo(
     tsModule,
     defaultExportType,
     checker,
-    config.vetur.completion.tagCasing
+    config.wepy.completion.tagCasing
   );
 
   if (componentsDefineInfo) {
@@ -68,7 +68,7 @@ export function getComponentInfo(
     tsModule,
     service,
     globalComponentInfos,
-    config.vetur.completion.tagCasing
+    config.wepy.completion.tagCasing
   );
   if (globalComponents.length > 0) {
     vueFileInfo.componentInfo.childComponents = [

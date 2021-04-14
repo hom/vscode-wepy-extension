@@ -17,28 +17,28 @@ describe('Should find prop type validation errors', () => {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(1, 13, 16),
-        source: 'Vetur'
+        source: 'Wepy'
       },
       {
         severity: DiagnosticSeverity.Error,
         message:
           "Type '{ count: number; isZeroCount: boolean; zeroToCount: number[]; }' is not assignable to type 'boolean'.",
         range: sameLineRange(1, 32, 36),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'boolean' is not assignable to type 'Function'.",
         range: sameLineRange(1, 46, 54),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(2, 13, 16),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
@@ -46,14 +46,14 @@ describe('Should find prop type validation errors', () => {
         message:
           "Type '{ count: number; isZeroCount: boolean; zeroToCount: number[]; }' is not assignable to type 'boolean'.",
         range: sameLineRange(2, 32, 36),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'boolean' is not assignable to type '() => void'.",
         range: sameLineRange(2, 46, 54),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
@@ -61,7 +61,7 @@ describe('Should find prop type validation errors', () => {
         message:
           "Type 'number[]' is not assignable to type 'string[]'.\n  Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(2, 76, 79),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       }
     ]);

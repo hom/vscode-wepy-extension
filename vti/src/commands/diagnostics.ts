@@ -35,15 +35,15 @@ const logLevel2Severity = {
 
 export async function diagnostics(workspace: string | null, logLevel: LogLevel) {
   console.log('====================================');
-  console.log('Getting Vetur diagnostics');
+  console.log('Getting Wepy diagnostics');
   let workspaceUri;
 
   if (workspace) {
     const absPath = path.resolve(process.cwd(), workspace);
-    console.log(`Loading Vetur in workspace path: ${chalk.green(absPath)}`);
+    console.log(`Loading Wepy in workspace path: ${chalk.green(absPath)}`);
     workspaceUri = URI.file(absPath);
   } else {
-    console.log(`Loading Vetur in current directory: ${chalk.green(process.cwd())}`);
+    console.log(`Loading Wepy in current directory: ${chalk.green(process.cwd())}`);
     workspaceUri = URI.file(process.cwd());
   }
 
@@ -89,7 +89,7 @@ async function prepareClientConnection(workspaceUri: URI) {
     async (params: InitializeParams): Promise<InitializeResult> => {
       await vls.init(params);
 
-      console.log('Vetur initialized');
+      console.log('Wepy initialized');
       console.log('====================================');
 
       return {

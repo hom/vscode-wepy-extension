@@ -12,7 +12,7 @@ export default {
   components: { Ite },
   data () {
     return {
-      ms: 'Vetur means "Winter" in icelandic.'
+      ms: 'Wepy means "Winter" in icelandic.'
     }
   },
   compute: {

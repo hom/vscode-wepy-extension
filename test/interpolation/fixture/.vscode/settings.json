@@ -1,4 +1,4 @@
 {
-  "vetur.experimental.templateInterpolationService": true,
-  "vetur.validation.templateProps": true
+  "wepy.experimental.templateInterpolationService": true,
+  "wepy.validation.templateProps": true
 }

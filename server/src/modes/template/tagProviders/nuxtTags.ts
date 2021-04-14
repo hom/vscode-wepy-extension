@@ -7,16 +7,16 @@ export function getNuxtTagProvider(packageRoot: string) {
   let nuxtTags, nuxtAttributes;
   for (const source of NUXT_JSON_SOURCES) {
     if (tryResolve(join(source, 'package.json'), packageRoot)) {
-      nuxtTags = tryRequire(join(source, 'vetur/nuxt-tags.json'), packageRoot);
-      nuxtAttributes = tryRequire(join(source, 'vetur/nuxt-attributes.json'), packageRoot);
+      nuxtTags = tryRequire(join(source, 'wepy/nuxt-tags.json'), packageRoot);
+      nuxtAttributes = tryRequire(join(source, 'wepy/nuxt-attributes.json'), packageRoot);
       if (nuxtTags) {
         break;
       }
     }
   }
 
-  const componentsTags = tryRequire(join(packageRoot, '.nuxt/vetur/tags.json'), packageRoot);
-  const componentsAttributes = tryRequire(join(packageRoot, '.nuxt/vetur/attributes.json'), packageRoot);
+  const componentsTags = tryRequire(join(packageRoot, '.nuxt/wepy/tags.json'), packageRoot);
+  const componentsAttributes = tryRequire(join(packageRoot, '.nuxt/wepy/attributes.json'), packageRoot);
 
   return getExternalTagProvider(
     'nuxt',

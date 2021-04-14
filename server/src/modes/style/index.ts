@@ -165,13 +165,13 @@ function getStyleMode(
       return languageService.getColorPresentations(embedded, stylesheets.refreshAndGet(embedded), color, range);
     },
     format(document, currRange, formattingOptions) {
-      if (env.getConfig().vetur.format.defaultFormatter[languageId] === 'none') {
+      if (env.getConfig().wepy.format.defaultFormatter[languageId] === 'none') {
         return [];
       }
       syncConfig();
 
       const { value, range } = getValueAndRange(document, currRange);
-      const needIndent = env.getConfig().vetur.format.styleInitialIndent;
+      const needIndent = env.getConfig().wepy.format.styleInitialIndent;
       const parserMap: { [k: string]: BuiltInParserName } = {
         css: 'css',
         postcss: 'css',
@@ -183,7 +183,7 @@ function getStyleMode(
         value,
         getFileFsPath(document.uri),
         range,
-        env.getConfig().vetur.format as VLSFormatConfig,
+        env.getConfig().wepy.format as VLSFormatConfig,
         parserMap[languageId],
         needIndent
       );

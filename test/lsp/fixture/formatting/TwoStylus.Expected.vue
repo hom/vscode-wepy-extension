@@ -1,4 +1,4 @@
-<!-- // https://github.com/vuejs/vetur/issues/499 -->
+<!-- // https://github.com/vuejs/wepy/issues/499 -->
 <style lang="stylus">
 .foo {
   color: blue;

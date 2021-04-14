@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
    * Custom Block Grammar generation command
    */
   context.subscriptions.push(
-    vscode.commands.registerCommand('vetur.generateGrammar', generateGrammarCommandHandler(context.extensionPath))
+    vscode.commands.registerCommand('wepy.generateGrammar', generateGrammarCommandHandler(context.extensionPath))
   );
 
   /**
@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
    */
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      'vetur.openUserScaffoldSnippetFolder',
+      'wepy.openUserScaffoldSnippetFolder',
       generateOpenUserScaffoldSnippetFolderCommand(globalSnippetDir)
     )
   );
@@ -74,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext) {
 async function displayInitProgress<T = void>(promise: Promise<T>) {
   return vscode.window.withProgress(
     {
-      title: 'Vetur initialization',
+      title: 'Wepy initialization',
       location: vscode.ProgressLocation.Window
     },
     () => promise
@@ -83,7 +83,7 @@ async function displayInitProgress<T = void>(promise: Promise<T>) {
 
 function registerRestartVLSCommand(context: vscode.ExtensionContext, client: LanguageClient) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('vetur.restartVLS', () =>
+    vscode.commands.registerCommand('wepy.restartVLS', () =>
       displayInitProgress(
         client
           .stop()
@@ -102,8 +102,8 @@ function registerCustomClientNotificationHandlers(client: LanguageClient) {
 
 function registerCustomLSPCommands(context: vscode.ExtensionContext, client: LanguageClient) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('vetur.showCorrespondingVirtualFile', generateShowVirtualFileCommand(client)),
-    vscode.commands.registerCommand('vetur.showOutputChannel', () => client.outputChannel.show()),
-    vscode.commands.registerCommand('vetur.showDoctorInfo', generateDoctorCommand(client))
+    vscode.commands.registerCommand('wepy.showCorrespondingVirtualFile', generateShowVirtualFileCommand(client)),
+    vscode.commands.registerCommand('wepy.showOutputChannel', () => client.outputChannel.show()),
+    vscode.commands.registerCommand('wepy.showDoctorInfo', generateDoctorCommand(client))
   );
 }

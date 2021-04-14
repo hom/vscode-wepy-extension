@@ -1,6 +1,6 @@
 {
-  "name": "vetur",
-  "displayName": "Vetur",
+  "name": "wepy",
+  "displayName": "Wepy",
   "description": "Vue tooling for VS Code",
   "author": "Pine Wu <octref@gmail.com>",
   "icon": "asset/vue.png",
@@ -44,10 +44,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vuejs/vetur.git"
+    "url": "https://github.com/vuejs/wepy.git"
   },
   "keywords": [
-    "vetur",
+    "wepy",
     "Vue",
     "vue",
     "vuejs"
@@ -65,33 +65,33 @@
   "contributes": {
     "commands": [
       {
-        "command": "vetur.restartVLS",
-        "category": "Vetur",
+        "command": "wepy.restartVLS",
+        "category": "Wepy",
         "title": "Restart VLS (Vue Language Server)"
       },
       {
-        "command": "vetur.generateGrammar",
-        "category": "Vetur",
-        "title": "Generate grammar from `vetur.grammar.customBlocks`"
+        "command": "wepy.generateGrammar",
+        "category": "Wepy",
+        "title": "Generate grammar from `wepy.grammar.customBlocks`"
       },
       {
-        "command": "vetur.showCorrespondingVirtualFile",
-        "category": "Vetur",
+        "command": "wepy.showCorrespondingVirtualFile",
+        "category": "Wepy",
         "title": "Show corresponding virtual file and sourcemap"
       },
       {
-        "command": "vetur.openUserScaffoldSnippetFolder",
-        "category": "Vetur",
+        "command": "wepy.openUserScaffoldSnippetFolder",
+        "category": "Wepy",
         "title": "Open user scaffold snippet folder"
       },
       {
-        "command": "vetur.showOutputChannel",
-        "category": "Vetur",
+        "command": "wepy.showOutputChannel",
+        "category": "Wepy",
         "title": "Show Output Channel"
       },
       {
-        "command": "vetur.showDoctorInfo",
-        "category": "Vetur",
+        "command": "wepy.showDoctorInfo",
+        "category": "Wepy",
         "title": "Show Doctor info"
       }
     ],
@@ -197,52 +197,52 @@
       }
     ],
     "configuration": {
-      "title": "Vetur",
+      "title": "Wepy",
       "properties": {
-        "vetur.ignoreProjectWarning": {
+        "wepy.ignoreProjectWarning": {
           "type": "boolean",
           "default": false,
-          "description": "Vetur will warn about not setup correctly for the project. You can disable it.",
+          "description": "Wepy will warn about not setup correctly for the project. You can disable it.",
           "scope": "application"
         },
-        "vetur.useWorkspaceDependencies": {
+        "wepy.useWorkspaceDependencies": {
           "type": "boolean",
           "default": false,
           "description": "Use dependencies from workspace. Currently only for TypeScript.",
           "scope": "application"
         },
-        "vetur.completion.autoImport": {
+        "wepy.completion.autoImport": {
           "type": "boolean",
           "default": true,
           "description": "Include completion for module export and auto import them"
         },
-        "vetur.completion.scaffoldSnippetSources": {
+        "wepy.completion.scaffoldSnippetSources": {
           "type": "object",
           "default": {
             "workspace": "💼",
             "user": "🗒️",
-            "vetur": "✌"
+            "wepy": "✌"
           },
           "properties": {
             "workspace": {
               "type": "string",
               "default": "💼",
-              "description": "Show Scaffold Snippets from `<WORKSPACE>/.vscode/vetur/snippets`."
+              "description": "Show Scaffold Snippets from `<WORKSPACE>/.vscode/wepy/snippets`."
             },
             "user": {
               "type": "string",
               "default": "🗒️",
-              "description": "Show Scaffold Snippets from `<USER-DATA-DIR>/User/snippets/vetur`."
+              "description": "Show Scaffold Snippets from `<USER-DATA-DIR>/User/snippets/wepy`."
             },
-            "vetur": {
+            "wepy": {
               "type": "string",
               "default": "✌",
-              "description": "Show Scaffold Snippets bundled in Vetur."
+              "description": "Show Scaffold Snippets bundled in Wepy."
             }
           },
-          "description": "Where Vetur source Scaffold Snippets from and how to indicate them. Set a source to \"\" to disable it.\n\n- workspace: `<WORKSPACE>/.vscode/vetur/snippets`.\n- user: `<USER-DATA-DIR>/User/snippets/vetur`.\n- vetur: Bundled in Vetur.\n\nThe default is:\n```\n\"vetur.completion.scaffoldSnippetSources\": {\n  \"workspace\": \"💼\",\n  \"user\": \"🗒️\",\n  \"vetur\": \"✌\"\n}\n```\n\nAlternatively, you can do:\n\n```\n\"vetur.completion.scaffoldSnippetSources\": {\n  \"workspace\": \"(W)\",\n  \"user\": \"(U)\",\n  \"vetur\": \"(V)\"\n}\n```\n\nRead more: https://vuejs.github.io/vetur/snippet.html."
+          "description": "Where Wepy source Scaffold Snippets from and how to indicate them. Set a source to \"\" to disable it.\n\n- workspace: `<WORKSPACE>/.vscode/wepy/snippets`.\n- user: `<USER-DATA-DIR>/User/snippets/wepy`.\n- wepy: Bundled in Wepy.\n\nThe default is:\n```\n\"wepy.completion.scaffoldSnippetSources\": {\n  \"workspace\": \"💼\",\n  \"user\": \"🗒️\",\n  \"wepy\": \"✌\"\n}\n```\n\nAlternatively, you can do:\n\n```\n\"wepy.completion.scaffoldSnippetSources\": {\n  \"workspace\": \"(W)\",\n  \"user\": \"(U)\",\n  \"wepy\": \"(V)\"\n}\n```\n\nRead more: https://vuejs.github.io/wepy/snippet.html."
         },
-        "vetur.completion.tagCasing": {
+        "wepy.completion.tagCasing": {
           "type": "string",
           "default": "kebab",
           "enum": [
@@ -255,7 +255,7 @@
           ],
           "description": "Casing conversion for tag completion"
         },
-        "vetur.grammar.customBlocks": {
+        "wepy.grammar.customBlocks": {
           "type": "object",
           "default": {
             "docs": "md",
@@ -263,47 +263,47 @@
           },
           "description": "Mapping from custom block tag name to language name. Used for generating grammar to support syntax highlighting for custom blocks."
         },
-        "vetur.validation.template": {
+        "wepy.validation.template": {
           "type": "boolean",
           "default": true,
           "description": "Validate vue-html in <template> using eslint-plugin-vue"
         },
-        "vetur.validation.templateProps": {
+        "wepy.validation.templateProps": {
           "type": "boolean",
           "default": false,
           "description": "Validate props usage in <template> region. Show error/warning for not passing declared props to child components and show error for passing wrongly typed interpolation expressions"
         },
-        "vetur.validation.interpolation": {
+        "wepy.validation.interpolation": {
           "type": "boolean",
           "default": true,
           "description": "Validate interpolations in <template> region using TypeScript language service"
         },
-        "vetur.validation.style": {
+        "wepy.validation.style": {
           "type": "boolean",
           "default": true,
           "description": "Validate css/scss/less/postcss in <style>"
         },
-        "vetur.validation.script": {
+        "wepy.validation.script": {
           "type": "boolean",
           "default": true,
           "description": "Validate js/ts in <script>"
         },
-        "vetur.format.enable": {
+        "wepy.format.enable": {
           "type": "boolean",
           "default": true,
-          "description": "Enable/disable the Vetur document formatter."
+          "description": "Enable/disable the Wepy document formatter."
         },
-        "vetur.format.options.tabSize": {
+        "wepy.format.options.tabSize": {
           "type": "number",
           "default": 2,
           "description": "Number of spaces per indentation level. Inherited by all formatters."
         },
-        "vetur.format.options.useTabs": {
+        "wepy.format.options.useTabs": {
           "type": "boolean",
           "default": false,
           "description": "Use tabs for indentation. Inherited by all formatters."
         },
-        "vetur.format.defaultFormatter.html": {
+        "wepy.format.defaultFormatter.html": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -320,7 +320,7 @@
           ],
           "description": "Default formatter for <template> region"
         },
-        "vetur.format.defaultFormatter.pug": {
+        "wepy.format.defaultFormatter.pug": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -333,7 +333,7 @@
           ],
           "description": "Default formatter for <template lang='pug'> region"
         },
-        "vetur.format.defaultFormatter.css": {
+        "wepy.format.defaultFormatter.css": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -346,7 +346,7 @@
           ],
           "description": "Default formatter for <style> region"
         },
-        "vetur.format.defaultFormatter.postcss": {
+        "wepy.format.defaultFormatter.postcss": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -359,7 +359,7 @@
           ],
           "description": "Default formatter for <style lang='postcss'> region"
         },
-        "vetur.format.defaultFormatter.scss": {
+        "wepy.format.defaultFormatter.scss": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -372,7 +372,7 @@
           ],
           "description": "Default formatter for <style lang='scss'> region"
         },
-        "vetur.format.defaultFormatter.sass": {
+        "wepy.format.defaultFormatter.sass": {
           "type": "string",
           "default": "sass-formatter",
           "enum": [
@@ -385,7 +385,7 @@
           ],
           "description": "Default formatter for <style lang='sass'> region"
         },
-        "vetur.format.defaultFormatter.less": {
+        "wepy.format.defaultFormatter.less": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -398,7 +398,7 @@
           ],
           "description": "Default formatter for <style lang='less'> region"
         },
-        "vetur.format.defaultFormatter.stylus": {
+        "wepy.format.defaultFormatter.stylus": {
           "type": "string",
           "default": "stylus-supremacy",
           "enum": [
@@ -411,7 +411,7 @@
           ],
           "description": "Default formatter for <style lang='stylus'> region"
         },
-        "vetur.format.defaultFormatter.js": {
+        "wepy.format.defaultFormatter.js": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -428,7 +428,7 @@
           ],
           "description": "Default formatter for <script> region"
         },
-        "vetur.format.defaultFormatter.ts": {
+        "wepy.format.defaultFormatter.ts": {
           "type": "string",
           "default": "prettier",
           "enum": [
@@ -444,7 +444,7 @@
           ],
           "description": "Default formatter for <script> region"
         },
-        "vetur.format.defaultFormatterOptions": {
+        "wepy.format.defaultFormatterOptions": {
           "type": "object",
           "properties": {
             "prettier": {
@@ -496,32 +496,32 @@
           },
           "description": "Options for all default formatters"
         },
-        "vetur.format.styleInitialIndent": {
+        "wepy.format.styleInitialIndent": {
           "type": "boolean",
           "default": false,
           "description": "Whether to have initial indent for <style> region"
         },
-        "vetur.format.scriptInitialIndent": {
+        "wepy.format.scriptInitialIndent": {
           "type": "boolean",
           "default": false,
           "description": "Whether to have initial indent for <script> region"
         },
-        "vetur.languageFeatures.codeActions": {
+        "wepy.languageFeatures.codeActions": {
           "type": "boolean",
           "default": true,
           "description": "Whether to enable codeActions"
         },
-        "vetur.languageFeatures.updateImportOnFileMove": {
+        "wepy.languageFeatures.updateImportOnFileMove": {
           "type": "boolean",
           "default": true,
           "description": "Whether to automatic updating import path when rename or move a file"
         },
-        "vetur.languageFeatures.semanticTokens": {
+        "wepy.languageFeatures.semanticTokens": {
           "type": "boolean",
           "default": true,
           "description": "Whether to enable semantic highlighting. Currently only works for typescript"
         },
-        "vetur.trace.server": {
+        "wepy.trace.server": {
           "type": "string",
           "enum": [
             "off",
@@ -531,17 +531,17 @@
           "default": "off",
           "description": "Traces the communication between VS Code and Vue Language Server."
         },
-        "vetur.dev.vlsPath": {
+        "wepy.dev.vlsPath": {
           "type": "string",
-          "description": "Path to vls for Vetur developers. There are two ways of using it. \n\n1. Clone vuejs/vetur from GitHub, build it and point it to the ABSOLUTE path of `/server`.\n2. `yarn global add vls` and point Vetur to the installed location (`yarn global dir` + node_modules/vls)",
+          "description": "Path to vls for Wepy developers. There are two ways of using it. \n\n1. Clone vuejs/wepy from GitHub, build it and point it to the ABSOLUTE path of `/server`.\n2. `yarn global add vls` and point Wepy to the installed location (`yarn global dir` + node_modules/vls)",
           "scope": "machine"
         },
-        "vetur.dev.vlsPort": {
+        "wepy.dev.vlsPort": {
           "type": "number",
           "description": "The port that VLS listens to. Can be used for attaching to the VLS Node process for debugging / profiling.",
           "default": -1
         },
-        "vetur.dev.logLevel": {
+        "wepy.dev.logLevel": {
           "type": "string",
           "description": "Log level for VLS",
           "default": "INFO",
@@ -554,7 +554,7 @@
             "Log info and debug messages."
           ]
         },
-        "vetur.experimental.templateInterpolationService": {
+        "wepy.experimental.templateInterpolationService": {
           "type": "boolean",
           "default": false,
           "description": "Enable template interpolation service that offers hover / definition / references in Vue interpolations."

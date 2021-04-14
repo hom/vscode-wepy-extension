@@ -24,7 +24,7 @@ describe('Should autocomplete interpolation for <template> in class component', 
     // }
     {
       label: 'msg',
-      documentation: new MarkdownString('My msg').appendCodeblock(`msg = 'Vetur means "Winter" in icelandic.'`, 'js'),
+      documentation: new MarkdownString('My msg').appendCodeblock(`msg = 'Wepy means "Winter" in icelandic.'`, 'js'),
       kind: CompletionItemKind.Field
     },
     {

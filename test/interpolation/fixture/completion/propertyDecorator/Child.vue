@@ -32,7 +32,7 @@ export default class BasicPropertyClass extends Vue {
   /**
    * My msg
    */
-  msg = 'Vetur means "Winter" in icelandic.'
+  msg = 'Wepy means "Winter" in icelandic.'
 
   /**
    * My obj

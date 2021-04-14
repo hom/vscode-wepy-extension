@@ -20,7 +20,7 @@ import Item from './Item.vue'
 export default {
   data () {
     return {
-      msg: 'Vetur means "Winter" in icelandic.'
+      msg: 'Wepy means "Winter" in icelandic.'
     }
   },
   computed: {

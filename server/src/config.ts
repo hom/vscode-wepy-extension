@@ -25,7 +25,7 @@ export interface VLSFormatConfig {
 }
 
 export interface VLSConfig {
-  vetur: {
+  wepy: {
     ignoreProjectWarning: boolean;
     useWorkspaceDependencies: boolean;
     completion: {
@@ -34,7 +34,7 @@ export interface VLSConfig {
       scaffoldSnippetSources: {
         workspace: string;
         user: string;
-        vetur: string;
+        wepy: string;
       };
     };
     grammar: {
@@ -94,7 +94,7 @@ export interface VLSFullConfig extends VLSConfig {
 
 export function getDefaultVLSConfig(): VLSFullConfig {
   return {
-    vetur: {
+    wepy: {
       ignoreProjectWarning: false,
       useWorkspaceDependencies: false,
       validation: {
@@ -110,7 +110,7 @@ export function getDefaultVLSConfig(): VLSFullConfig {
         scaffoldSnippetSources: {
           workspace: '💼',
           user: '🗒️',
-          vetur: '✌'
+          wepy: '✌'
         }
       },
       grammar: {
@@ -215,7 +215,7 @@ export async function getVeturFullConfig(
           root: projectRoot,
           package: getFallbackPackagePath(projectRoot),
           tsconfig: getFallbackTsconfigPath(projectRoot),
-          snippetFolder: normalizeFileNameResolve(projectRoot, '.vscode/vetur/snippets'),
+          snippetFolder: normalizeFileNameResolve(projectRoot, '.vscode/wepy/snippets'),
           globalComponents: []
         } as VeturProject;
       }
@@ -231,7 +231,7 @@ export async function getVeturFullConfig(
           : getFallbackTsconfigPath(projectRoot),
         snippetFolder: project.snippetFolder
           ? normalizeAbsolutePath(project.snippetFolder, projectRoot)
-          : normalizeFileNameResolve(projectRoot, '.vscode/vetur/snippets'),
+          : normalizeFileNameResolve(projectRoot, '.vscode/wepy/snippets'),
         globalComponents: flatten(
           project.globalComponents?.map(comp => {
             if (typeof comp === 'string') {

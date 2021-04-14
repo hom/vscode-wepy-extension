@@ -1,21 +1,21 @@
 module.exports = {
-  title: 'Vetur',
+  title: 'Wepy',
   description: 'Vue tooling for VS Code.',
-  base: '/vetur/',
+  base: '/wepy/',
   markdown: {
     linkify: true
   },
   themeConfig: {
-    repo: 'vuejs/vetur',
+    repo: 'vuejs/wepy',
     editLinks: true,
     docsDir: 'docs',
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'Reference', link: '/reference/' },
       { text: 'FAQ', link: '/guide/FAQ' },
-      { text: 'Roadmap', link: 'https://github.com/vuejs/vetur/issues/873' },
+      { text: 'Roadmap', link: 'https://github.com/vuejs/wepy/issues/873' },
       { text: 'Credits', link: '/credits' },
-      { text: 'Contribution Guide', link: 'https://github.com/vuejs/vetur/wiki#contribution-guide' }
+      { text: 'Contribution Guide', link: 'https://github.com/vuejs/wepy/wiki#contribution-guide' }
     ],
     sidebar: {
       '/guide/': [

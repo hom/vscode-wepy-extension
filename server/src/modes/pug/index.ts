@@ -13,7 +13,7 @@ export function getPugMode(env: EnvironmentService, dependencyService: Dependenc
       return 'pug';
     },
     format(document, currRange, formattingOptions) {
-      if (env.getConfig().vetur.format.defaultFormatter['pug'] === 'none') {
+      if (env.getConfig().wepy.format.defaultFormatter['pug'] === 'none') {
         return [];
       }
 
@@ -24,7 +24,7 @@ export function getPugMode(env: EnvironmentService, dependencyService: Dependenc
         value,
         getFileFsPath(document.uri),
         range,
-        env.getConfig().vetur.format as VLSFormatConfig,
+        env.getConfig().wepy.format as VLSFormatConfig,
         // @ts-expect-error
         'pug',
         false

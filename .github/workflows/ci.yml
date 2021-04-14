@@ -28,8 +28,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     # https://github.com/Dart-Code/Dart-Code/commit/612732d5879730608baa9622bf7f5e5b7b51ae65
-    # Do not run CI twice for PR opened from branches in vuejs/vetur
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'vuejs/vetur'
+    # Do not run CI twice for PR opened from branches in vuejs/wepy
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != 'vuejs/wepy'
 
     strategy:
       matrix:

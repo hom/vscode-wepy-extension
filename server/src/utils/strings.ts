@@ -70,7 +70,7 @@ export function modulePathToValidIdentifier(
   modulePath: string,
   target: ts.ScriptTarget | undefined
 ): string {
-  const baseName = basename(modulePath, '.vue');
+  const baseName = basename(modulePath, '.wpy');
   let res = '';
   let lastCharWasValid = true;
   const firstCharCode = baseName.charCodeAt(0);

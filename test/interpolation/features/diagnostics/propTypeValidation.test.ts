@@ -17,42 +17,42 @@ describe('Should find prop type valiation errors', () => {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(2, 15, 18),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'boolean'.",
         range: sameLineRange(2, 28, 32),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'Function'.",
         range: sameLineRange(2, 42, 50),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(3, 15, 18),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type 'boolean'.",
         range: sameLineRange(3, 28, 32),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
         severity: DiagnosticSeverity.Error,
         message: "Type 'number' is not assignable to type '() => void'.",
         range: sameLineRange(3, 42, 50),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       },
       {
@@ -60,7 +60,7 @@ describe('Should find prop type valiation errors', () => {
         message:
           "Type 'number[]' is not assignable to type 'string[]'.\n  Type 'number' is not assignable to type 'string'.",
         range: sameLineRange(3, 60, 63),
-        source: 'Vetur',
+        source: 'Wepy',
         code: 2322
       }
     ]);

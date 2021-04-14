@@ -3,7 +3,7 @@ import path from 'path';
 import { CompletionItem, InsertTextFormat, CompletionItemKind, MarkupContent } from 'vscode-languageserver-types';
 import { logger } from '../../log';
 
-type SnippetSource = 'workspace' | 'user' | 'vetur';
+type SnippetSource = 'workspace' | 'user' | 'wepy';
 type SnippetType = 'file' | 'template' | 'style' | 'script' | 'custom';
 interface Snippet {
   source: SnippetSource;
@@ -16,7 +16,7 @@ interface Snippet {
 export interface ScaffoldSnippetSources {
   workspace: string | undefined;
   user: string | undefined;
-  vetur: string | undefined;
+  wepy: string | undefined;
 }
 
 export class SnippetManager {
@@ -25,7 +25,7 @@ export class SnippetManager {
   constructor(snippetFolder: string, globalSnippetDir?: string) {
     const workspaceSnippets = loadAllSnippets(snippetFolder, 'workspace');
     const userSnippets = globalSnippetDir ? loadAllSnippets(globalSnippetDir, 'user') : [];
-    const veturSnippets = loadAllSnippets(path.resolve(__dirname, './veturSnippets'), 'vetur');
+    const veturSnippets = loadAllSnippets(path.resolve(__dirname, './veturSnippets'), 'wepy');
 
     this._snippets = [...workspaceSnippets, ...userSnippets, ...veturSnippets];
   }
@@ -83,7 +83,7 @@ function loadAllSnippets(rootDir: string, source: SnippetSource): Snippet[] {
         return;
       }
       const absPath = path.resolve(rootDir, p);
-      if (!absPath.endsWith('.vue') && fs.existsSync(absPath) && fs.lstatSync(absPath).isDirectory()) {
+      if (!absPath.endsWith('.wpy') && fs.existsSync(absPath) && fs.lstatSync(absPath).isDirectory()) {
         const customDirSnippets = loadSnippetsFromDir(absPath, source, 'custom').map(s => {
           return {
             ...s,
@@ -110,7 +110,7 @@ function loadSnippetsFromDir(dir: string, source: SnippetSource, type: SnippetTy
 
   try {
     fs.readdirSync(dir)
-      .filter(p => p.endsWith('.vue'))
+      .filter(p => p.endsWith('.wpy'))
       .forEach(p => {
         snippets.push({
           source,
@@ -130,7 +130,7 @@ function computeSortTextPrefix(snippet: Snippet) {
   const s = {
     workspace: 0,
     user: 1,
-    vetur: 2
+    wepy: 2
   }[snippet.source];
 
   const t = {
@@ -147,7 +147,7 @@ function computeSortTextPrefix(snippet: Snippet) {
 function computeDetailsForFileIcon(s: Snippet) {
   switch (s.type) {
     case 'file':
-      return s.name + ' | .vue';
+      return s.name + ' | .wpy';
     case 'template':
       return s.name + ' | .html';
     case 'style':

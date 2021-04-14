@@ -7,7 +7,7 @@
   "devDependencies": {
     "element-ui": "^2.13.2"
   },
-  "vetur": {
+  "wepy": {
     "tags": "./tags.json",
     "attributes": "./attributes.json"
   }

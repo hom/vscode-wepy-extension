@@ -1,1 +1,1 @@
-<!-- Open this file before testing to activate Vetur/VLS -->
+<!-- Open this file before testing to activate Wepy/VLS -->

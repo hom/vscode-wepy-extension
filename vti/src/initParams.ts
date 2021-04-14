@@ -4,14 +4,14 @@ import { URI } from 'vscode-uri';
 export function getInitParams(workspaceUri: URI): InitializeParams {
   const defaultVLSConfig = getDefaultVLSConfig();
 
-  defaultVLSConfig.vetur.validation = {
+  defaultVLSConfig.wepy.validation = {
     template: false,
     style: false,
     script: false,
     interpolation: true,
     templateProps: true
   };
-  defaultVLSConfig.vetur.experimental = {
+  defaultVLSConfig.wepy.experimental = {
     templateInterpolationService: true
   };
 
@@ -30,7 +30,7 @@ export function getInitParams(workspaceUri: URI): InitializeParams {
 
 function getDefaultVLSConfig() {
   return {
-    vetur: {
+    wepy: {
       useWorkspaceDependencies: false,
       validation: {
         template: true,
@@ -45,7 +45,7 @@ function getDefaultVLSConfig() {
         scaffoldSnippetSources: {
           workspace: '💼',
           user: '🗒️',
-          vetur: '✌'
+          wepy: '✌'
         }
       },
       grammar: {

@@ -3,7 +3,7 @@
 </template>
 
 <script>
-// https://github.com/vuejs/vetur/issues/1775
+// https://github.com/vuejs/wepy/issues/1775
 export default {
   props: ['attr']
 };

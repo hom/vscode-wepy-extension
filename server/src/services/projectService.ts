@@ -81,12 +81,12 @@ export async function createProjectService(
   function getValidationFlags(): Record<string, boolean> {
     const config = env.getConfig();
     return {
-      'vue-html': config.vetur.validation.template,
-      css: config.vetur.validation.style,
-      postcss: config.vetur.validation.style,
-      scss: config.vetur.validation.style,
-      less: config.vetur.validation.style,
-      javascript: config.vetur.validation.script
+      'vue-html': config.wepy.validation.template,
+      css: config.wepy.validation.style,
+      postcss: config.wepy.validation.style,
+      scss: config.wepy.validation.style,
+      less: config.wepy.validation.style,
+      javascript: config.wepy.validation.script
     };
   }
 
@@ -104,7 +104,7 @@ export async function createProjectService(
     env,
     languageModes,
     async onDocumentFormatting({ textDocument, options }) {
-      if (!env.getConfig().vetur.format.enable) {
+      if (!env.getConfig().wepy.format.enable) {
         return [];
       }
 
@@ -301,7 +301,7 @@ export async function createProjectService(
       return result;
     },
     async onCodeAction({ textDocument, range, context }: CodeActionParams) {
-      if (!env.getConfig().vetur.languageFeatures.codeActions) {
+      if (!env.getConfig().wepy.languageFeatures.codeActions) {
         return [];
       }
 
@@ -333,7 +333,7 @@ export async function createProjectService(
       return action;
     },
     async onWillRenameFile(fileRename: FileRename) {
-      if (!env.getConfig().vetur.languageFeatures.updateImportOnFileMove) {
+      if (!env.getConfig().wepy.languageFeatures.updateImportOnFileMove) {
         return [];
       }
 
@@ -342,7 +342,7 @@ export async function createProjectService(
       return textDocumentEdit ?? [];
     },
     async onSemanticTokens(params: SemanticTokensParams | SemanticTokensRangeParams) {
-      if (!env.getConfig().vetur.languageFeatures.semanticTokens) {
+      if (!env.getConfig().wepy.languageFeatures.semanticTokens) {
         return {
           data: []
         };
@@ -382,7 +382,7 @@ export async function createProjectService(
             // Special case for template type checking
             else if (
               lmr.mode.getId() === 'vue-html' &&
-              env.getConfig().vetur.experimental.templateInterpolationService
+              env.getConfig().wepy.experimental.templateInterpolationService
             ) {
               diagnostics.push.apply(diagnostics, await lmr.mode.doValidation(doc, cancellationToken));
             }

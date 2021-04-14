@@ -19,7 +19,7 @@
 export default {
   data () {
     return {
-      msg: 'Vetur means "Winter" in icelandic.',
+      msg: 'Wepy means "Winter" in icelandic.',
       list: [0, 1, 2],
       readonlyList: ['foo', 'bar'] as Readonly<string[]>
     }

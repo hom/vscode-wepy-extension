@@ -4,7 +4,7 @@
   "dependencies": {
     "vue": "^2.6.11"
   },
-  "vetur": {
+  "wepy": {
     "tags": "./tags.json"
   }
 }

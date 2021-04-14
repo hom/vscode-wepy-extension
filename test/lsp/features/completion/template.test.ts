@@ -66,8 +66,8 @@ describe('Should autocomplete for <template>', () => {
     it('completes tags/attributes for ChildComp', async () => {
       const c = workspace.getConfiguration();
 
-      // test this in "vetur.completion.tagCasing": "initial"
-      await c.update('vetur.completion.tagCasing', 'initial', ConfigurationTarget.Global);
+      // test this in "wepy.completion.tagCasing": "initial"
+      await c.update('wepy.completion.tagCasing', 'initial', ConfigurationTarget.Global);
 
       await testCompletion(parentUri, position(4, 6), ['ChildComp']);
 
@@ -85,7 +85,7 @@ describe('Should autocomplete for <template>', () => {
       ]);
 
       // set it back
-      await c.update('vetur.completion.tagCasing', undefined, ConfigurationTarget.Global);
+      await c.update('wepy.completion.tagCasing', undefined, ConfigurationTarget.Global);
     });
 
     const parent1775Uri = getDocUri('completion/template/childComponent/Parent1775.vue');

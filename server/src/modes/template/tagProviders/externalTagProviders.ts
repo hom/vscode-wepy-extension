@@ -26,11 +26,11 @@ export const gridsomeTagProvider = getExternalTagProvider('gridsome', gridsomeTa
  * Get tag providers specified in workspace root's packaage.json
  */
 export function getWorkspaceTagProvider(packageRoot: string, rootPkgJson: any): IHTMLTagProvider | null {
-  if (!rootPkgJson.vetur) {
+  if (!rootPkgJson.wepy) {
     return null;
   }
-  const tagsPath = findConfigFile(packageRoot, rootPkgJson.vetur.tags);
-  const attrsPath = findConfigFile(packageRoot, rootPkgJson.vetur.attributes);
+  const tagsPath = findConfigFile(packageRoot, rootPkgJson.wepy.tags);
+  const attrsPath = findConfigFile(packageRoot, rootPkgJson.wepy.attributes);
 
   try {
     if (tagsPath && attrsPath) {
@@ -46,16 +46,16 @@ export function getWorkspaceTagProvider(packageRoot: string, rootPkgJson: any): 
 }
 
 /**
- * Get tag providers specified in packaage.json's `vetur` key
+ * Get tag providers specified in packaage.json's `wepy` key
  */
 export function getDependencyTagProvider(packageRoot: string, depPkgJson: any): IHTMLTagProvider | null {
-  if (!depPkgJson.vetur) {
+  if (!depPkgJson.wepy) {
     return null;
   }
 
   try {
-    const tagsPath = require.resolve(path.join(depPkgJson.name, depPkgJson.vetur.tags), { paths: [packageRoot] });
-    const attrsPath = require.resolve(path.join(depPkgJson.name, depPkgJson.vetur.attributes), {
+    const tagsPath = require.resolve(path.join(depPkgJson.name, depPkgJson.wepy.tags), { paths: [packageRoot] });
+    const attrsPath = require.resolve(path.join(depPkgJson.name, depPkgJson.wepy.attributes), {
       paths: [packageRoot]
     });
 

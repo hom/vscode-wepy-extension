@@ -27,7 +27,7 @@ export default class BasicClass extends Vue {
   /**
    * My msg
    */
-  msg = 'Vetur means "Winter" in icelandic.'
+  msg = 'Wepy means "Winter" in icelandic.'
 
   /**
    * My obj

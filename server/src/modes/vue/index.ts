@@ -8,7 +8,7 @@ export function getVueMode(env: EnvironmentService, globalSnippetDir?: string): 
   const scaffoldSnippetSources: ScaffoldSnippetSources = {
     workspace: '💼',
     user: '🗒️',
-    vetur: '✌'
+    wepy: '✌'
   };
 
   return {
@@ -16,12 +16,12 @@ export function getVueMode(env: EnvironmentService, globalSnippetDir?: string): 
       return 'vue';
     },
     doComplete(document, position) {
-      const scaffoldSnippetSources: ScaffoldSnippetSources = env.getConfig().vetur.completion.scaffoldSnippetSources;
+      const scaffoldSnippetSources: ScaffoldSnippetSources = env.getConfig().wepy.completion.scaffoldSnippetSources;
 
       if (
         scaffoldSnippetSources['workspace'] === '' &&
         scaffoldSnippetSources['user'] === '' &&
-        scaffoldSnippetSources['vetur'] === ''
+        scaffoldSnippetSources['wepy'] === ''
       ) {
         return { isIncomplete: false, items: [] };
       }

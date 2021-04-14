@@ -18,7 +18,7 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
 
   let serverPath;
 
-  const devVlsPackagePath = config.get('vetur.dev.vlsPath', '');
+  const devVlsPackagePath = config.get('wepy.dev.vlsPath', '');
   if (devVlsPackagePath && devVlsPackagePath !== '' && existsSync(devVlsPackagePath)) {
     serverPath = resolve(devVlsPackagePath, 'dist/vueServerMain.js');
   } else {
@@ -26,7 +26,7 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
   }
 
   const runExecArgv: string[] = [];
-  const vlsPort = config.get('vetur.dev.vlsPort');
+  const vlsPort = config.get('wepy.dev.vlsPort');
   if (vlsPort !== -1) {
     runExecArgv.push(`--inspect=${vlsPort}`);
     console.log(`Will launch VLS in port: ${vlsPort}`);
@@ -41,7 +41,7 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
     documentSelector,
     synchronize: {
       configurationSection: [
-        'vetur',
+        'wepy',
         'sass',
         'emmet',
         'html',
@@ -60,5 +60,5 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
     revealOutputChannelOn: RevealOutputChannelOn.Never
   };
 
-  return new LanguageClient('vetur', 'Vue Language Server', serverOptions, clientOptions);
+  return new LanguageClient('wepy', 'Vue Language Server', serverOptions, clientOptions);
 }

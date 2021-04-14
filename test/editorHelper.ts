@@ -1,7 +1,7 @@
 import vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
 
-const EXT_IDENTIFIER = 'octref.vetur';
+const EXT_IDENTIFIER = 'octref.wepy';
 const ext = vscode.extensions.getExtension(EXT_IDENTIFIER);
 /**
  * Activate Extension and open a Vue file to make sure LS is running

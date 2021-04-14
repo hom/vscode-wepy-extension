@@ -186,7 +186,7 @@ export function getServiceHost(
     const filePath = getFilePath(doc.uri);
     // When file is not in language service, add it
     if (!localScriptRegionDocuments.has(fileFsPath)) {
-      if (fileFsPath.endsWith('.vue') || fileFsPath.endsWith('.vue.template')) {
+      if (fileFsPath.endsWith('.wpy') || fileFsPath.endsWith('.wpy.template')) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -215,7 +215,7 @@ export function getServiceHost(
     const filePath = getFilePath(doc.uri);
     // When file is not in language service, add it
     if (!localScriptRegionDocuments.has(fileFsPath)) {
-      if (fileFsPath.endsWith('.vue') || fileFsPath.endsWith('.vue.template')) {
+      if (fileFsPath.endsWith('.wpy') || fileFsPath.endsWith('.wpy.template')) {
         scriptFileNameSet.add(filePath);
       }
     }
@@ -332,7 +332,7 @@ export function getServiceHost(
         include?: ReadonlyArray<string>,
         depth?: number
       ): string[] {
-        const allExtensions = extensions ? extensions.concat(['.vue']) : extensions;
+        const allExtensions = extensions ? extensions.concat(['.wpy']) : extensions;
         return vueSys.readDirectory(path, allExtensions, exclude, include, depth);
       },
 
@@ -370,7 +370,7 @@ export function getServiceHost(
             return undefined;
           }
 
-          if (tsResolvedModule.resolvedFileName.endsWith('.vue.ts')) {
+          if (tsResolvedModule.resolvedFileName.endsWith('.wpy.ts')) {
             const resolvedFileName = tsResolvedModule.resolvedFileName.slice(0, -'.ts'.length);
             const uri = URI.file(resolvedFileName);
             const resolvedFileFsPath = normalizeFileNameToFsPath(resolvedFileName);

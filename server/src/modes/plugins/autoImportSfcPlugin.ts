@@ -103,7 +103,7 @@ export function createAutoImportSfcPlugin(
     },
     doComplete(document): CompletionItem[] {
       const config = getConfigure();
-      if (!config.vetur.completion.autoImport) {
+      if (!config.wepy.completion.autoImport) {
         return [];
       }
       if (!getVueFiles || !getJSResolve || !vueInfoService) {
@@ -116,7 +116,7 @@ export function createAutoImportSfcPlugin(
         .filter(fileName => !childComponentsPath.includes(fileName))
         .map(fileName => {
           let tagName = basename(fileName, '.wpy');
-          if (config.vetur.completion.tagCasing === 'kebab') {
+          if (config.wepy.completion.tagCasing === 'kebab') {
             tagName = kebabCase(tagName);
           }
           const documentation = `
@@ -196,7 +196,7 @@ import ${upperFirst(camelCase(tagName))} from '${fileName}'
           textEdits.push(TextEdit.insert(document.positionAt(componentInsertPos), newInsertTexts.join('')));
         }
         item.additionalTextEdits = textEdits;
-        item.insertText = config.vetur.completion.tagCasing === 'initial' ? componentName : kebabCase(componentName);
+        item.insertText = config.wepy.completion.tagCasing === 'initial' ? componentName : kebabCase(componentName);
       } else if (componentInfo.insertInOptionAPIPos) {
         /**
          * no have `components` property case
@@ -218,10 +218,10 @@ import ${upperFirst(camelCase(tagName))} from '${fileName}'
         );
         if (textEdits) {
           const newInsertTexts = [NEW_LINE];
-          if (config.vetur.format.options.useTabs) {
+          if (config.wepy.format.options.useTabs) {
             newInsertTexts.push('\t');
           } else {
-            newInsertTexts.push(' '.repeat(config.vetur.format.options.tabSize));
+            newInsertTexts.push(' '.repeat(config.wepy.format.options.tabSize));
           }
           newInsertTexts.push(`components: { ${componentName} },`);
           textEdits.push(
@@ -229,7 +229,7 @@ import ${upperFirst(camelCase(tagName))} from '${fileName}'
           );
         }
         item.additionalTextEdits = textEdits;
-        item.insertText = config.vetur.completion.tagCasing === 'initial' ? componentName : kebabCase(componentName);
+        item.insertText = config.wepy.completion.tagCasing === 'initial' ? componentName : kebabCase(componentName);
       }
 
       return item;

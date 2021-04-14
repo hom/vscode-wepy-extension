@@ -118,7 +118,7 @@ export class VLS {
         : [];
 
     if (workspaceFolders.length === 0) {
-      console.error('No workspace path found. Vetur initialization failed.');
+      console.error('No workspace path found. Wepy initialization failed.');
       return {
         capabilities: {}
       };
@@ -165,9 +165,9 @@ export class VLS {
       }
     }
 
-    let veturConfigPath = findConfigFile(workspace.fsPath, 'vetur.config.js');
+    let veturConfigPath = findConfigFile(workspace.fsPath, 'wepy.config.js');
     if (!veturConfigPath) {
-      veturConfigPath = findConfigFile(workspace.fsPath, 'vetur.config.cjs');
+      veturConfigPath = findConfigFile(workspace.fsPath, 'wepy.config.cjs');
     }
     const rootPathForConfig = normalizeFileNameToFsPath(
       veturConfigPath ? path.dirname(veturConfigPath) : workspace.fsPath
@@ -197,8 +197,8 @@ export class VLS {
   private setupConfigListeners() {
     this.lspConnection.onDidChangeConfiguration(async ({ settings }: DidChangeConfigurationParams) => {
       this.workspaceConfig = this.getVLSFullConfig({}, settings);
-      let isFormatEnable = (this.workspaceConfig as VLSFullConfig)?.vetur?.format?.enable ?? false;
-      logger.setLevel((this.workspaceConfig as VLSFullConfig)?.vetur?.dev.logLevel);
+      let isFormatEnable = (this.workspaceConfig as VLSFullConfig)?.wepy?.format?.enable ?? false;
+      logger.setLevel((this.workspaceConfig as VLSFullConfig)?.wepy?.dev.logLevel);
       this.projects.forEach(project => {
         const veturConfig = this.workspaces.get(project.env.getRootPathForConfig());
         if (!veturConfig) {
@@ -206,7 +206,7 @@ export class VLS {
         }
         const fullConfig = this.getVLSFullConfig(veturConfig.settings, this.workspaceConfig);
         project.env.configure(fullConfig);
-        isFormatEnable = isFormatEnable || fullConfig.vetur.format.enable;
+        isFormatEnable = isFormatEnable || fullConfig.wepy.format.enable;
       });
       this.setupDynamicFormatters(isFormatEnable);
     });
@@ -241,7 +241,7 @@ export class VLS {
   }
 
   private warnProjectIfNeed(projectConfig: ProjectConfig) {
-    if (projectConfig.vlsFullConfig.vetur.ignoreProjectWarning) {
+    if (projectConfig.vlsFullConfig.wepy.ignoreProjectWarning) {
       return;
     }
 
@@ -254,7 +254,7 @@ export class VLS {
       }
     };
     const showErrorIfCantAccess = (name: string, fsPath: string) => {
-      this.lspConnection.window.showErrorMessage(`Vetur can't access ${fsPath} for ${name}.`);
+      this.lspConnection.window.showErrorMessage(`Wepy can't access ${fsPath} for ${name}.`);
     };
 
     const showWarningAndLearnMore = (message: string, url: string) => {
@@ -266,11 +266,11 @@ export class VLS {
     };
 
     const getCantFindMessage = (fileNames: string[]) =>
-      `Vetur can't find ${fileNames.map(el => `\`${el}\``).join(' or ')} in ${projectConfig.rootFsPath}.`;
+      `Wepy can't find ${fileNames.map(el => `\`${el}\``).join(' or ')} in ${projectConfig.rootFsPath}.`;
     if (!projectConfig.tsconfigPath) {
       showWarningAndLearnMore(
         getCantFindMessage(['tsconfig.json', 'jsconfig.json']),
-        'https://vuejs.github.io/vetur/guide/FAQ.html#vetur-can-t-find-tsconfig-json-jsconfig-json-in-xxxx-xxxxxx'
+        'https://vuejs.github.io/wepy/guide/FAQ.html#wepy-can-t-find-tsconfig-json-jsconfig-json-in-xxxx-xxxxxx'
       );
     } else if (!isFileCanAccess(projectConfig.tsconfigPath)) {
       showErrorIfCantAccess('ts/js config', projectConfig.tsconfigPath);
@@ -283,8 +283,8 @@ export class VLS {
         ].includes(projectConfig.tsconfigPath ?? '')
       ) {
         showWarningAndLearnMore(
-          `Vetur found \`tsconfig.json\`/\`jsconfig.json\`, but they aren\'t in the project root.`,
-          'https://vuejs.github.io/vetur/guide/FAQ.html#vetur-found-xxx-but-they-aren-t-in-the-project-root'
+          `Wepy found \`tsconfig.json\`/\`jsconfig.json\`, but they aren\'t in the project root.`,
+          'https://vuejs.github.io/wepy/guide/FAQ.html#wepy-found-xxx-but-they-aren-t-in-the-project-root'
         );
       }
     }
@@ -292,7 +292,7 @@ export class VLS {
     if (!projectConfig.packagePath) {
       showWarningAndLearnMore(
         getCantFindMessage(['package.json']),
-        'https://vuejs.github.io/vetur/guide/FAQ.html#vetur-can-t-find-package-json-in-xxxx-xxxxxx'
+        'https://vuejs.github.io/wepy/guide/FAQ.html#wepy-can-t-find-package-json-in-xxxx-xxxxxx'
       );
     } else if (!isFileCanAccess(projectConfig.packagePath)) {
       showErrorIfCantAccess('ts/js config', projectConfig.packagePath);
@@ -302,8 +302,8 @@ export class VLS {
         normalizeFileNameResolve(projectConfig.rootFsPath, 'package.json') !== projectConfig.packagePath
       ) {
         showWarningAndLearnMore(
-          `Vetur found \`package.json\`/, but it isn\'t in the project root.`,
-          'https://vuejs.github.io/vetur/guide/FAQ.html#vetur-found-xxx-but-they-aren-t-in-the-project-root'
+          `Wepy found \`package.json\`/, but it isn\'t in the project root.`,
+          'https://vuejs.github.io/wepy/guide/FAQ.html#wepy-found-xxx-but-they-aren-t-in-the-project-root'
         );
       }
     }
@@ -351,7 +351,7 @@ export class VLS {
     const dependencyService = await createDependencyService(
       projectConfig.rootPathForConfig,
       projectConfig.workspaceFsPath,
-      projectConfig.vlsFullConfig.vetur.useWorkspaceDependencies,
+      projectConfig.vlsFullConfig.wepy.useWorkspaceDependencies,
       nodeModulePaths,
       projectConfig.vlsFullConfig.typescript.tsdk
     );
@@ -408,7 +408,7 @@ export class VLS {
 
       return JSON.stringify(
         {
-          name: 'Vetur doctor info',
+          name: 'Wepy doctor info',
           fileName,
           currentProject: {
             vueVersion: project ? getVueVersionKey(project?.env.getVueVersion()) : null,
@@ -465,9 +465,9 @@ export class VLS {
         if (c.type === FileChangeType.Changed) {
           const fsPath = getFileFsPath(c.uri);
 
-          // when `vetur.config.js` changed
+          // when `wepy.config.js` changed
           if (this.workspaces.has(fsPath)) {
-            logger.logInfo(`refresh vetur config when ${fsPath} changed.`);
+            logger.logInfo(`refresh wepy config when ${fsPath} changed.`);
             const name = this.workspaces.get(fsPath)?.name ?? '';
             this.workspaces.delete(fsPath);
             await this.addWorkspace({ name, fsPath });

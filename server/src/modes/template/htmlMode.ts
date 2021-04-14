@@ -63,7 +63,7 @@ export class HTMLMode implements LanguageMode {
     if (await isVCancellationRequested(cancellationToken)) {
       return [];
     }
-    if (this.env.getConfig().vetur.validation.templateProps) {
+    if (this.env.getConfig().wepy.validation.templateProps) {
       const info = this.vueInfoService ? this.vueInfoService.getInfo(document) : undefined;
       const version = this.env.getVueVersion();
       if (info && info.componentInfo.childComponents) {
@@ -74,7 +74,7 @@ export class HTMLMode implements LanguageMode {
     if (await isVCancellationRequested(cancellationToken)) {
       return diagnostics;
     }
-    if (this.env.getConfig().vetur.validation.template) {
+    if (this.env.getConfig().wepy.validation.template) {
       const embedded = this.embeddedDocuments.refreshAndGet(document);
       diagnostics.push(...(await doESLintValidation(embedded, this.lintEngine)));
     }
@@ -115,7 +115,7 @@ export class HTMLMode implements LanguageMode {
     return findDocumentSymbols(document, this.vueDocuments.refreshAndGet(document));
   }
   format(document: TextDocument, range: Range, formattingOptions: FormattingOptions) {
-    return htmlFormat(this.dependencyService, document, range, this.env.getConfig().vetur.format as VLSFormatConfig);
+    return htmlFormat(this.dependencyService, document, range, this.env.getConfig().wepy.format as VLSFormatConfig);
   }
   findDefinition(document: TextDocument, position: Position) {
     const embedded = this.embeddedDocuments.refreshAndGet(document);

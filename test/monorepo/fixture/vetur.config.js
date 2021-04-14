@@ -1,6 +1,6 @@
 module.exports = {
   settings: {
-    'vetur.validation.templateProps': true
+    'wepy.validation.templateProps': true
   },
   projects: [
     './packages/vue2',
