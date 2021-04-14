@@ -32,8 +32,8 @@
   ],
   "folding": {
     "markers": {
-      "start": "^<(template|style|script)[^>]*>",
-      "end": "^</(template|style|script)>"
+      "start": "^<(template|style|script|config|wxs)[^>]*>",
+      "end": "^</(template|style|script|config|wxs)>"
     }
   }
 }

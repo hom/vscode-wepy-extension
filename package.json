@@ -59,7 +59,7 @@
     "vscode": "^1.52.0"
   },
   "activationEvents": [
-    "onLanguage:vue"
+    "onLanguage:wpy"
   ],
   "main": "./dist/vueMain.js",
   "contributes": {
@@ -97,18 +97,18 @@
     ],
     "breakpoints": [
       {
-        "language": "vue"
+        "language": "wpy"
       }
     ],
     "languages": [
       {
-        "id": "vue",
+        "id": "wpy",
         "aliases": [
-          "Vue",
-          "vue"
+          "Wpy",
+          "wpy"
         ],
         "extensions": [
-          ".vue"
+          ".wpy"
         ],
         "configuration": "./languages/vue-language-configuration.json"
       },
@@ -131,7 +131,7 @@
     ],
     "grammars": [
       {
-        "language": "vue",
+        "language": "wpy",
         "scopeName": "source.vue",
         "path": "./syntaxes/vue-generated.json",
         "embeddedLanguages": {
