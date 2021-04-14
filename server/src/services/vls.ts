@@ -442,7 +442,7 @@ export class VLS {
     if (enable) {
       if (!this.documentFormatterRegistration) {
         this.documentFormatterRegistration = await this.lspConnection.client.register(DocumentFormattingRequest.type, {
-          documentSelector: [{ language: 'vue' }]
+          documentSelector: [{ language: 'wpy' }]
         });
       }
     } else {
@@ -699,7 +699,7 @@ export class VLS {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       workspace: {
         workspaceFolders: { supported: true, changeNotifications: true },
-        fileOperations: { willRename: { filters: [{ pattern: { glob: '**/*.{ts,js,vue}' } }] } }
+        fileOperations: { willRename: { filters: [{ pattern: { glob: '**/*.{ts,js,vue,wpy}' } }] } }
       },
       completionProvider: { resolveProvider: true, triggerCharacters: ['.', ':', '<', '"', "'", '/', '@', '*', ' '] },
       signatureHelpProvider: { triggerCharacters: ['('] },

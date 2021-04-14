@@ -552,7 +552,7 @@ function getParsedConfig(
 ) {
   const configFilename = tsconfigPath;
   const configJson = (configFilename && tsModule.readConfigFile(configFilename, tsModule.sys.readFile).config) || {
-    include: ['**/*.vue'],
+    include: ['**/*.wpy'],
     exclude: defaultIgnorePatterns(tsModule, projectRoot)
   };
   // existingOptions should be empty since it always takes priority
@@ -565,7 +565,7 @@ function getParsedConfig(
     /*resolutionStack*/ undefined,
     [
       {
-        extension: 'vue',
+        extension: 'wpy',
         isMixedContent: true,
         // Note: in order for parsed config to include *.vue files, scriptKind must be set to Deferred.
         // tslint:disable-next-line max-line-length

@@ -124,7 +124,7 @@ function range2Location(range: Range): SourceLocation {
 async function getDiagnostics(workspaceUri: URI, severity: DiagnosticSeverity) {
   const clientConnection = await prepareClientConnection(workspaceUri);
 
-  const files = glob.sync('**/*.vue', { cwd: workspaceUri.fsPath, ignore: ['node_modules/**'] });
+  const files = glob.sync('**/*.wpy', { cwd: workspaceUri.fsPath, ignore: ['node_modules/**'] });
 
   if (files.length === 0) {
     console.log('No input files');
@@ -142,7 +142,7 @@ async function getDiagnostics(workspaceUri: URI, severity: DiagnosticSeverity) {
     const fileText = fs.readFileSync(absFilePath, 'utf-8');
     await clientConnection.sendNotification(DidOpenTextDocumentNotification.type, {
       textDocument: {
-        languageId: 'vue',
+        languageId: 'wpy',
         uri: URI.file(absFilePath).toString(),
         version: 1,
         text: fileText

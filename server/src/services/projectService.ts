@@ -372,7 +372,7 @@ export async function createProjectService(
     },
     async doValidate(doc: TextDocument, cancellationToken?: VCancellationToken) {
       const diagnostics: Diagnostic[] = [];
-      if (doc.languageId === 'vue') {
+      if (doc.languageId === 'wpy') {
         const validationFlags = getValidationFlags();
         for (const lmr of languageModes.getAllLanguageModeRangesInDocument(doc)) {
           if (lmr.mode.doValidation) {

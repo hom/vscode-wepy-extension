@@ -87,7 +87,7 @@ export interface LanguageModeRange extends LanguageRange {
 
 export class LanguageModes {
   private modes: { [k in LanguageId]: LanguageMode } = {
-    vue: nullMode,
+    wpy: nullMode,
     pug: nullMode,
     'vue-html': nullMode,
     css: nullMode,
@@ -153,7 +153,7 @@ export class LanguageModes {
     autoImportSfcPlugin.setGetConfigure(env.getConfig);
     autoImportSfcPlugin.setGetJSResolve(jsMode.doResolve!);
 
-    this.modes['vue'] = getVueMode(env, globalSnippetDir);
+    this.modes['wpy'] = getVueMode(env, globalSnippetDir);
     this.modes['vue-html'] = vueHtmlMode;
     this.modes['pug'] = getPugMode(env, services.dependencyService);
     this.modes['css'] = getCSSMode(env, this.documentRegions, services.dependencyService);

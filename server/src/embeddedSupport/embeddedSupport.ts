@@ -3,7 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
 
 export type LanguageId =
-  | 'vue'
+  | 'wpy'
   | 'vue-html'
   | 'pug'
   | 'css'
@@ -97,7 +97,7 @@ function getLanguageAtPosition(document: TextDocument, regions: EmbeddedRegion[]
       break;
     }
   }
-  return 'vue';
+  return 'wpy';
 }
 
 export function getSingleLanguageDocument(
