@@ -1,7 +1,8 @@
-import { TextDocument, Range, Position } from 'vscode-languageserver-types';
+import { Range, Position } from 'vscode-languageserver-types';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getFileFsPath } from '../../utils/paths';
-import * as ts from 'typescript';
-import { T_TypeScript } from '../dependencyService';
+import type ts from 'typescript';
+import { RuntimeLibrary } from '../dependencyService';
 
 interface TemplateSourceMapRange {
   start: number;
@@ -49,12 +50,12 @@ export interface TemplateSourceMap {
  *   from: {
  *     start: 0,
  *     end: 8
- *     filename: 'foo.wpy'
+ *     filename: 'foo.vue'
  *   },
  *   to: {
  *     start: 0,
  *     end: 18
- *     filename: 'foo.wpy.template'
+ *     filename: 'foo.vue.template'
  *   },
  *   offsetMapping: {
  *     0: 5,
@@ -64,7 +65,7 @@ export interface TemplateSourceMap {
  * }
  */
 export function generateSourceMap(
-  tsModule: T_TypeScript,
+  tsModule: RuntimeLibrary['typescript'],
   syntheticSourceFile: ts.SourceFile,
   validSourceFile: ts.SourceFile
 ): TemplateSourceMapNode[] {
@@ -84,12 +85,11 @@ export function generateSourceMap(
       return false;
     });
 
-    if (validNodeChildren.length !== syntheticNodeChildren.length) {
-      return;
-    }
-
     validNodeChildren.forEach((vc, i) => {
       const sc = syntheticNodeChildren[i];
+      if (!sc) {
+        return;
+      }
 
       const scSourceRange = tsModule.getSourceMapRange(sc);
 
@@ -165,7 +165,7 @@ function foldSourceMapNodes(nodes: TemplateSourceMapNode[]): TemplateSourceMapNo
   }, []);
 }
 
-function canIncludeTrivia(tsModule: T_TypeScript, node: ts.Node): boolean {
+function canIncludeTrivia(tsModule: RuntimeLibrary['typescript'], node: ts.Node): boolean {
   return !(
     tsModule.isIdentifier(node) ||
     tsModule.isStringLiteral(node) ||
@@ -175,7 +175,7 @@ function canIncludeTrivia(tsModule: T_TypeScript, node: ts.Node): boolean {
 }
 
 /**
- * Map a range from actual `.wpy` file to `.wpy.template` file
+ * Map a range from actual `.vue` file to `.vue.template` file
  */
 export function mapFromPositionToOffset(
   document: TextDocument,
@@ -188,7 +188,7 @@ export function mapFromPositionToOffset(
 }
 
 /**
- * Map an offset from actual `.wpy` file to `.wpy.template` file
+ * Map an offset from actual `.vue` file to `.vue.template` file
  */
 function mapFromOffsetToOffset(document: TextDocument, offset: number, sourceMap: TemplateSourceMap): number {
   const filePath = getFileFsPath(document.uri);
@@ -207,7 +207,7 @@ function mapFromOffsetToOffset(document: TextDocument, offset: number, sourceMap
 }
 
 /**
- * Map a range from actual `.wpy` file to `.wpy.template` file
+ * Map a range from actual `.vue` file to `.vue.template` file
  */
 export function mapToRange(toDocument: TextDocument, from: ts.TextSpan, sourceMap: TemplateSourceMap): Range {
   const filePath = getFileFsPath(toDocument.uri);
@@ -231,7 +231,7 @@ export function mapToRange(toDocument: TextDocument, from: ts.TextSpan, sourceMa
 }
 
 /**
- * Map a range from virtual `.wpy.template` file back to original `.wpy` file
+ * Map a range from virtual `.vue.template` file back to original `.vue` file
  */
 export function mapBackRange(fromDocumnet: TextDocument, to: ts.TextSpan, sourceMap: TemplateSourceMap): Range {
   const filePath = getFileFsPath(fromDocumnet.uri);
@@ -271,7 +271,18 @@ function updateOffsetMapping(node: TemplateSourceMapNode, isThisInjected: boolea
      * Without this back mapping, mapping error from `this.bar` in `f(this.bar)` would fail
      */
     node.offsetBackMapping[nodeToStart] = nodeFromStart + 'this.'.length;
+  } else if (to.length > from.length) {
+    /**
+     * The case when `to` is wider than `from`
+     * For example, in `:foo="num"` to `{ "foo": this.num }`,
+     * need to map `"foo"` back to `foo`
+     */
+    const delta = to.length - from.length;
+    for (let i = 0; i < delta; i++) {
+      node.offsetBackMapping[node.to.start + from.length + i] = node.from.end;
+    }
   }
+
   const toFiltered = to as number[];
   if (isThisInjected) {
     toFiltered.splice(nodeToStart, 'this.'.length);
@@ -286,9 +297,21 @@ function updateOffsetMapping(node: TemplateSourceMapNode, isThisInjected: boolea
   mapping.forEach(([fromOffset, toOffset]) => {
     const from = fromOffset + nodeFromStart;
     const to = toOffset + nodeToStart;
-    node.offsetMapping[from] = to;
-    node.offsetBackMapping[to] = from;
+
+    if (!!from && !!to) {
+      node.offsetMapping[from] = to;
+      node.offsetBackMapping[to] = from;
+    }
   });
+
+  if (to.length < from.length) {
+    /**
+     * The case when `from` is wider than `to`
+     * For example, in `<foooooo bar="" />` to `{ "props": { bar: ... }}`,
+     * need to map `props` back to `foooooo`
+     */
+    node.offsetBackMapping[node.to.end] = node.from.end;
+  }
 }
 
 export function printSourceMap(sourceMap: TemplateSourceMap, vueFileSrc: string, tsFileSrc: string) {

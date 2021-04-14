@@ -1,5 +1,6 @@
 import { platform } from 'os';
-import Uri from 'vscode-uri';
+import { isAbsolute, resolve } from 'path';
+import { URI } from 'vscode-uri';
 
 /**
  * Vetur mainly deals with paths / uris from two objects
@@ -12,13 +13,13 @@ import Uri from 'vscode-uri';
  *
  * ## `TextDocument.uri`
  *
- * - macOS / Linux: file:///foo/bar.wpy
- * - Windows: file:///c%3A/foo/bar.wpy (%3A is `:`)
+ * - macOS / Linux: file:///foo/bar.vue
+ * - Windows: file:///c%3A/foo/bar.vue (%3A is `:`)
  *
  * ## `SourceFile.fileName`
  *
- * - macOS / Linux: /foo/bar.wpy
- * - Windows: c:/foo/bar.wpy
+ * - macOS / Linux: /foo/bar.vue
+ * - Windows: c:/foo/bar.vue
  *
  * ## vscode-uri
  *
@@ -29,22 +30,22 @@ import Uri from 'vscode-uri';
  *
  * - macOS / Linux:
  * ```
- * > Uri.parse('file:///foo/bar.wpy').fsPath
- * '/foo/bar.wpy'
- * > Uri.parse('file:///foo/bar.wpy').path
- * '/foo/bar.wpy'
+ * > Uri.parse('file:///foo/bar.vue').fsPath
+ * '/foo/bar.vue'
+ * > Uri.parse('file:///foo/bar.vue').path
+ * '/foo/bar.vue'
  * ```
  * - Windows
  * ```
- * > Uri.parse('file:///c%3A/foo/bar.wpy').fsPath
- * 'c:\\foo\\bar.wpy' (\\ escapes to \)
- * > Uri.parse('file:///c%3A/foo/bar.wpy').path
- * '/c:/foo/bar.wpy'
+ * > Uri.parse('file:///c%3A/foo/bar.vue').fsPath
+ * 'c:\\foo\\bar.vue' (\\ escapes to \)
+ * > Uri.parse('file:///c%3A/foo/bar.vue').path
+ * '/c:/foo/bar.vue'
  * ```
  */
 
 export function getFileFsPath(documentUri: string): string {
-  return Uri.parse(documentUri).fsPath;
+  return URI.parse(documentUri).fsPath;
 }
 
 export function getFilePath(documentUri: string): string {
@@ -53,12 +54,28 @@ export function getFilePath(documentUri: string): string {
     // Windows have a leading slash like /C:/Users/pine
     // vscode-uri use lower-case drive letter
     // https://github.com/microsoft/vscode-uri/blob/95e03c06f87d38f25eda1ae3c343fe5b7eec3f52/src/index.ts#L1017
-    return Uri.parse(documentUri).path.replace(/^\/[a-zA-Z]/, (s: string) => s.slice(1).toLowerCase());
+    return URI.parse(documentUri).path.replace(/^\/[a-zA-Z]/, (s: string) => s.slice(1).toLowerCase());
   } else {
-    return Uri.parse(documentUri).path;
+    return URI.parse(documentUri).path;
   }
 }
 
 export function normalizeFileNameToFsPath(fileName: string) {
-  return Uri.file(fileName).fsPath;
+  return URI.file(fileName).fsPath;
+}
+
+export function normalizeFileNameResolve(...paths: string[]) {
+  return normalizeFileNameToFsPath(resolve(...paths));
+}
+
+export function getPathDepth(filePath: string, sep: string) {
+  return filePath.split(sep).length;
+}
+
+export function getFsPathToUri(fsPath: string) {
+  return URI.file(fsPath).toString();
+}
+
+export function normalizeAbsolutePath(fsPath: string, root: string) {
+  return isAbsolute(fsPath) ? normalizeFileNameToFsPath(fsPath) : normalizeFileNameResolve(root, fsPath);
 }

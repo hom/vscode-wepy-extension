@@ -1,4 +1,5 @@
-import { TextDocument, Position, Range } from 'vscode-languageserver-types';
+import { Position, Range } from 'vscode-languageserver-types';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { parseVueDocumentRegions, EmbeddedRegion } from './vueDocumentRegionParser';
 
 export type LanguageId =
@@ -13,7 +14,8 @@ export type LanguageId =
   | 'stylus'
   | 'javascript'
   | 'typescript'
-  | 'tsx';
+  | 'tsx'
+  | 'unknown';
 
 export interface LanguageRange extends Range {
   languageId: LanguageId;
@@ -136,6 +138,10 @@ export function getSingleTypeDocument(
       newContent = newContent.slice(0, r.start) + oldContent.slice(r.start, r.end) + newContent.slice(r.end);
       langId = r.languageId;
     }
+  }
+
+  if (type === 'script' && newContent.trim().length === 0) {
+    newContent = 'export default {};';
   }
 
   return TextDocument.create(document.uri, langId, document.version, newContent);

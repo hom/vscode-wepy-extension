@@ -1,13 +1,11 @@
-import * as vscode from 'vscode';
-import { LanguageClient } from 'vscode-languageclient';
+import vscode from 'vscode';
+import { LanguageClient } from 'vscode-languageclient/node';
 
 let fileName = '';
 let virtualFileSource = '';
 let prettySourceMap = '';
 
-const separator = Array(20)
-  .fill('=')
-  .join('');
+const separator = Array(20).fill('=').join('');
 
 const onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
 
@@ -22,9 +20,9 @@ export async function registerVeturTextDocumentProviders() {
 
 export function generateShowVirtualFileCommand(client: LanguageClient) {
   return async () => {
-    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document.fileName.endsWith('.wpy')) {
+    if (!vscode.window.activeTextEditor || !vscode.window.activeTextEditor.document.fileName.endsWith('.vue')) {
       return vscode.window.showInformationMessage(
-        'Failed to show virtual file. Make sure the current file is a .wpy file.'
+        'Failed to show virtual file. Make sure the current file is a .vue file.'
       );
     }
 

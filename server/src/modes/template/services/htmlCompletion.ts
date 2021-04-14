@@ -1,5 +1,4 @@
 import {
-  TextDocument,
   Position,
   CompletionList,
   CompletionItemKind,
@@ -8,19 +7,24 @@ import {
   InsertTextFormat,
   CompletionItem
 } from 'vscode-languageserver-types';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { HTMLDocument } from '../parser/htmlParser';
 import { TokenType, createScanner, ScannerState } from '../parser/htmlScanner';
 import { IHTMLTagProvider } from '../tagProviders';
 import * as emmet from 'vscode-emmet-helper';
 import { NULL_COMPLETION } from '../../nullMode';
 import { getModifierProvider, Modifier } from '../modifierProvider';
+import { toMarkupContent } from '../../../utils/strings';
+import { Priority } from '../tagProviders/common';
+import { kebabCase } from 'lodash';
 
 export function doComplete(
   document: TextDocument,
   position: Position,
   htmlDocument: HTMLDocument,
   tagProviders: IHTMLTagProvider[],
-  emmetConfig: emmet.EmmetConfiguration
+  emmetConfig: emmet.VSCodeEmmetConfig,
+  autoImportCompletions?: CompletionItem[]
 ): CompletionList {
   const modifierProvider = getModifierProvider();
 
@@ -31,7 +35,7 @@ export function doComplete(
 
   const offset = document.offsetAt(position);
   const node = htmlDocument.findNodeBefore(offset);
-  if (!node || node.isInterpolation) {
+  if (!node || (node.isInterpolation && offset <= node.end)) {
     return result;
   }
 
@@ -55,11 +59,20 @@ export function doComplete(
         result.items.push({
           label: tag,
           kind: CompletionItemKind.Property,
-          documentation: label,
+          documentation: toMarkupContent(label),
           textEdit: TextEdit.replace(range, tag),
           sortText: priority + tag,
           insertTextFormat: InsertTextFormat.PlainText
         });
+      });
+    });
+    autoImportCompletions?.forEach(item => {
+      result.items.push({
+        ...item,
+        kind: CompletionItemKind.Property,
+        textEdit: TextEdit.replace(range, item.label),
+        sortText: Priority.UserCode + item.label,
+        insertTextFormat: InsertTextFormat.PlainText
       });
     });
     return result;
@@ -119,7 +132,7 @@ export function doComplete(
         result.items.push({
           label: '/' + tag,
           kind: CompletionItemKind.Property,
-          documentation: label,
+          documentation: toMarkupContent(label),
           filterText: '/' + tag + closeTag,
           textEdit: TextEdit.replace(range, '/' + tag + closeTag),
           insertTextFormat: InsertTextFormat.PlainText
@@ -135,18 +148,36 @@ export function doComplete(
     return result;
   }
 
+  function getUsedAttributes(offset: number) {
+    const node = htmlDocument.findNodeBefore(offset);
+    return new Set(node.attributeNames.map(normalizeAttributeNameToKebabCase));
+  }
+
   function collectAttributeNameSuggestions(nameStart: number, nameEnd: number = offset): CompletionList {
-    const execArray = /^[:@]/.exec(scanner.getTokenText());
+    const usedAttributes = getUsedAttributes(nameStart);
+    const currentAttribute = scanner.getTokenText();
+    const execArray = /^[:@]/.exec(currentAttribute);
     const filterPrefix = execArray ? execArray[0] : '';
     const start = filterPrefix ? nameStart + 1 : nameStart;
     const range = getReplaceRange(start, nameEnd);
     const value = isFollowedBy(text, nameEnd, ScannerState.AfterAttributeName, TokenType.DelimiterAssign)
       ? ''
       : '="$1"';
-    const tag = currentTag.toLowerCase();
     tagProviders.forEach(provider => {
       const priority = provider.priority;
-      provider.collectAttributes(tag, (attribute, type, documentation) => {
+      provider.collectAttributes(currentTag, (attribute, type, documentation) => {
+        if (
+          // include current typing attribute for completing `="$1"`
+          !(attribute === currentAttribute && text[nameEnd] !== '=') &&
+          // can listen to same event by adding modifiers
+          type !== 'event' &&
+          // `class` and `:class`, `style` and `:style` can coexist
+          attribute !== 'class' &&
+          attribute !== 'style' &&
+          usedAttributes.has(normalizeAttributeNameToKebabCase(attribute))
+        ) {
+          return;
+        }
         if ((type === 'event' && filterPrefix !== '@') || (type !== 'event' && filterPrefix === '@')) {
           return;
         }
@@ -154,13 +185,18 @@ export function doComplete(
         if (type !== 'v' && value.length) {
           codeSnippet = codeSnippet + value;
         }
+        if ((filterPrefix === ':' && codeSnippet[0] === ':') || (filterPrefix === '@' && codeSnippet[0] === '@')) {
+          codeSnippet = codeSnippet.slice(1);
+        }
+        const trimedName = attribute.replace(/^(?::|@)/, '');
         result.items.push({
           label: attribute,
           kind: type === 'event' ? CompletionItemKind.Function : CompletionItemKind.Value,
           textEdit: TextEdit.replace(range, codeSnippet),
           insertTextFormat: InsertTextFormat.Snippet,
-          sortText: priority + attribute,
-          documentation
+          sortText: priority + trimedName,
+          filterText: trimedName,
+          documentation: toMarkupContent(documentation)
         });
       });
     });
@@ -174,7 +210,7 @@ export function doComplete(
             textEdit: TextEdit.insert(document.positionAt(nameEnd), modifier.label),
             insertTextFormat: InsertTextFormat.Snippet,
             sortText: modifiers.priority + modifier.label,
-            documentation: modifier.documentation
+            documentation: toMarkupContent(modifier.documentation)
           });
         });
       }
@@ -229,10 +265,9 @@ export function doComplete(
       range = getReplaceRange(valueStart, valueEnd);
       addQuotes = true;
     }
-    const tag = currentTag.toLowerCase();
     const attribute = currentAttributeName.toLowerCase();
     tagProviders.forEach(provider => {
-      provider.collectValues(tag, attribute, value => {
+      provider.collectValues(currentTag, attribute, value => {
         const insertText = addQuotes ? '"' + value + '"' : value;
         result.items.push({
           label: value,
@@ -285,11 +320,16 @@ export function doComplete(
         break;
       case TokenType.AttributeValue:
         if (scanner.getTokenOffset() <= offset && offset <= scanner.getTokenEnd()) {
-          return collectAttributeValueSuggestions(
-            currentAttributeName,
-            scanner.getTokenOffset(),
-            scanner.getTokenEnd()
-          );
+          if (currentAttributeName === 'style') {
+            const emmetCompletions = emmet.doComplete(document, position, 'css', emmetConfig);
+            return emmetCompletions || NULL_COMPLETION;
+          } else {
+            return collectAttributeValueSuggestions(
+              currentAttributeName,
+              scanner.getTokenOffset(),
+              scanner.getTokenEnd()
+            );
+          }
         }
         break;
       case TokenType.Whitespace:
@@ -332,7 +372,7 @@ export function doComplete(
         break;
       case TokenType.Content:
         if (offset <= scanner.getTokenEnd()) {
-          return emmet.doComplete(document, position, 'html', emmetConfig);
+          return emmet.doComplete(document, position, 'html', emmetConfig) ?? NULL_COMPLETION;
         }
         break;
       default:
@@ -371,4 +411,27 @@ function getWordEnd(s: string, offset: number, limit: number): number {
     offset++;
   }
   return offset;
+}
+
+export function normalizeAttributeNameToKebabCase(attr: string): string {
+  let result = attr;
+
+  if (result.startsWith('v-model:')) {
+    result = attr.slice('v-model:'.length);
+  }
+
+  if (result.startsWith('v-bind:')) {
+    result = attr.slice('v-bind:'.length);
+  } else if (result.startsWith(':')) {
+    result = attr.slice(':'.length);
+  }
+
+  // Remove modifiers
+  if (result.includes('.')) {
+    result = result.slice(0, result.indexOf('.'));
+  }
+
+  result = kebabCase(result);
+
+  return result;
 }

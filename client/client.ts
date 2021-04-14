@@ -1,18 +1,19 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import {
   LanguageClient,
   RevealOutputChannelOn,
   ServerOptions,
   TransportKind,
-  LanguageClientOptions
-} from 'vscode-languageclient';
+  LanguageClientOptions,
+  DocumentFilter
+} from 'vscode-languageclient/node';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 
 export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir: string): LanguageClient {
-  const debugOptions = { execArgv: ['--nolazy', '--inspect=8021'] };
+  const debugOptions = { execArgv: ['--nolazy', '--inspect=6005'] };
 
-  const documentSelector = ['vue'];
+  const documentSelector: DocumentFilter[] = [{ language: 'vue', scheme: 'file' }];
   const config = vscode.workspace.getConfiguration();
 
   let serverPath;
@@ -50,7 +51,7 @@ export function initializeLanguageClient(vlsModulePath: string, globalSnippetDir
         'prettier',
         'stylusSupremacy'
       ],
-      fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.js,**/*.ts}', false, false, true)
+      fileEvents: vscode.workspace.createFileSystemWatcher('{**/*.js,**/*.ts,**/*.json}', false, false, true)
     },
     initializationOptions: {
       config,

@@ -1,24 +1,27 @@
-import * as ts from 'typescript';
+import type ts from 'typescript';
 import { CompletionItemKind, SymbolKind } from 'vscode-languageserver';
 
 export function isVueFile(path: string) {
-  return path.endsWith('.wpy');
+  return path.endsWith('.vue');
 }
 
 /**
- * If the path ends with `.wpy.ts`, it's a `.wpy` file pre-processed by Vetur
+ * If the path ends with `.vue.ts`, it's a `.vue` file pre-processed by Vetur
  * to be used in TS Language Service
+ *
+ * Note: all files outside any node_modules folder are considered,
+ * EXCEPT if they are added to tsconfig via 'files' or 'include' properties
  */
-export function isVirtualVueFile(path: string) {
-  return path.endsWith('.wpy.ts') && !path.includes('node_modules');
+export function isVirtualVueFile(path: string, projectFiles: Set<string>) {
+  return path.endsWith('.vue.ts') && (!path.includes('node_modules') || projectFiles.has(path.slice(0, -'.ts'.length)));
 }
 
 /**
- * If the path ends with `.wpy.template`, it's a `.wpy` file's template part
+ * If the path ends with `.vue.template`, it's a `.vue` file's template part
  * pre-processed by Vetur to calculate template diagnostics in TS Language Service
  */
 export function isVirtualVueTemplateFile(path: string) {
-  return path.endsWith('.wpy.template');
+  return path.endsWith('.vue.template');
 }
 
 export function findNodeByOffset(root: ts.Node, offset: number): ts.Node | undefined {

@@ -6,10 +6,8 @@ import {
   SignatureHelp,
   SignatureInformation,
   ParameterInformation,
-  Command,
   Definition,
   TextEdit,
-  TextDocument,
   Diagnostic,
   DiagnosticSeverity,
   Range,
@@ -22,42 +20,69 @@ import {
   Position,
   FormattingOptions,
   DiagnosticTag,
-  MarkupContent
+  MarkupContent,
+  CodeAction,
+  CodeActionKind,
+  FoldingRangeKind,
+  CompletionItemTag,
+  CodeActionContext,
+  TextDocumentEdit,
+  VersionedTextDocumentIdentifier
 } from 'vscode-languageserver-types';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { LanguageMode } from '../../embeddedSupport/languageModes';
-import { VueDocumentRegions, LanguageRange } from '../../embeddedSupport/embeddedSupport';
+import { VueDocumentRegions, LanguageRange, LanguageId } from '../../embeddedSupport/embeddedSupport';
 import { prettierify, prettierEslintify, prettierTslintify } from '../../utils/prettier';
 import { getFileFsPath, getFilePath } from '../../utils/paths';
 
-import Uri from 'vscode-uri';
-import * as ts from 'typescript';
-import * as _ from 'lodash';
+import { URI } from 'vscode-uri';
+import type ts from 'typescript';
+import _ from 'lodash';
 
 import { nullMode, NULL_SIGNATURE } from '../nullMode';
-import { VLSFormatConfig } from '../../config';
+import { BasicComponentInfo, VLSFormatConfig } from '../../config';
 import { VueInfoService } from '../../services/vueInfoService';
 import { getComponentInfo } from './componentInfo';
-import { DependencyService, T_TypeScript, State } from '../../services/dependencyService';
-import { RefactorAction } from '../../types';
+import { DependencyService, RuntimeLibrary } from '../../services/dependencyService';
+import {
+  CodeActionData,
+  CodeActionDataKind,
+  OrganizeImportsActionData,
+  RefactorActionData,
+  SemanticTokenOffsetData
+} from '../../types';
 import { IServiceHost } from '../../services/typescriptService/serviceHost';
-import { toCompletionItemKind, toSymbolKind } from '../../services/typescriptService/util';
+import {
+  isVirtualVueTemplateFile,
+  isVueFile,
+  toCompletionItemKind,
+  toSymbolKind
+} from '../../services/typescriptService/util';
+import * as Previewer from './previewer';
+import { isVCancellationRequested, VCancellationToken } from '../../utils/cancellationToken';
+import { EnvironmentService } from '../../services/EnvironmentService';
+import { getCodeActionKind } from './CodeActionKindConverter';
+import { FileRename } from 'vscode-languageserver';
+import {
+  addCompositionApiRefTokens,
+  getTokenModifierFromClassification,
+  getTokenTypeFromClassification
+} from './semanticToken';
 
 // Todo: After upgrading to LS server 4.0, use CompletionContext for filtering trigger chars
 // https://microsoft.github.io/language-server-protocol/specification#completion-request-leftwards_arrow_with_hook
 const NON_SCRIPT_TRIGGERS = ['<', '*', ':'];
 
+const SEMANTIC_TOKEN_CONTENT_LENGTH_LIMIT = 80000;
+
 export async function getJavascriptMode(
   serviceHost: IServiceHost,
+  env: EnvironmentService,
   documentRegions: LanguageModelCache<VueDocumentRegions>,
-  workspacePath: string | undefined,
-  vueInfoService?: VueInfoService,
-  dependencyService?: DependencyService
+  dependencyService: DependencyService,
+  globalComponentInfos: BasicComponentInfo[],
+  vueInfoService?: VueInfoService
 ): Promise<LanguageMode> {
-  if (!workspacePath) {
-    return {
-      ...nullMode
-    };
-  }
   const jsDocuments = getLanguageModelCache(10, 60, document => {
     const vueDocument = documentRegions.refreshAndGet(document);
     return vueDocument.getSingleTypeDocument('script');
@@ -69,24 +94,54 @@ export async function getJavascriptMode(
     return scriptRegions.length > 0 ? scriptRegions[0] : undefined;
   });
 
-  let tsModule: T_TypeScript = ts;
-  if (dependencyService) {
-    const tsDependency = dependencyService.getDependency('typescript');
-    if (tsDependency && tsDependency.state === State.Loaded) {
-      tsModule = tsDependency.module;
-    }
-  }
+  const tsModule: RuntimeLibrary['typescript'] = dependencyService.get('typescript').module;
 
   const { updateCurrentVueTextDocument } = serviceHost;
-  let config: any = {};
   let supportedCodeFixCodes: Set<number>;
+
+  function getUserPreferences(scriptDoc: TextDocument): ts.UserPreferences {
+    return getUserPreferencesByLanguageId(scriptDoc.languageId);
+  }
+  function getUserPreferencesByLanguageId(languageId: string): ts.UserPreferences {
+    const baseConfig = env.getConfig()[languageId === 'javascript' ? 'javascript' : 'typescript'];
+    const preferencesConfig = baseConfig?.preferences;
+
+    if (!baseConfig || !preferencesConfig) {
+      return {};
+    }
+
+    function safeGetConfigValue<V extends string | boolean, A extends Array<V>, D = undefined>(
+      configValue: any,
+      allowValues: A,
+      defaultValue?: D
+    ) {
+      return allowValues.includes(configValue) ? (configValue as A[number]) : (defaultValue as D);
+    }
+
+    return {
+      quotePreference: safeGetConfigValue(preferencesConfig.quoteStyle, ['single', 'double', 'auto']),
+      importModuleSpecifierPreference: safeGetConfigValue(preferencesConfig.importModuleSpecifier, [
+        'relative',
+        'non-relative'
+      ]),
+      importModuleSpecifierEnding: safeGetConfigValue(
+        preferencesConfig.importModuleSpecifierEnding,
+        ['minimal', 'index', 'js'],
+        'auto'
+      ),
+      allowTextChangesInNewFiles: true,
+      providePrefixAndSuffixTextForRename:
+        preferencesConfig.renameShorthandProperties === false ? false : preferencesConfig.useAliasesForRenames,
+      // @ts-expect-error
+      allowRenameOfImportPath: true,
+      includeAutomaticOptionalChainCompletions: baseConfig.suggest.includeAutomaticOptionalChainCompletions ?? true,
+      provideRefactorNotApplicableReason: true
+    };
+  }
 
   return {
     getId() {
       return 'javascript';
-    },
-    configure(c) {
-      config = c;
     },
     updateFileInfo(doc: TextDocument): void {
       if (!vueInfoService) {
@@ -95,23 +150,44 @@ export async function getJavascriptMode(
 
       const { service } = updateCurrentVueTextDocument(doc);
       const fileFsPath = getFileFsPath(doc.uri);
-      const info = getComponentInfo(tsModule, service, fileFsPath, config);
+      const info = getComponentInfo(tsModule, service, fileFsPath, globalComponentInfos, env.getConfig());
       if (info) {
         vueInfoService.updateInfo(doc, info);
       }
     },
 
-    doValidation(doc: TextDocument): Diagnostic[] {
+    async doValidation(doc: TextDocument, cancellationToken?: VCancellationToken): Promise<Diagnostic[]> {
+      if (await isVCancellationRequested(cancellationToken)) {
+        return [];
+      }
       const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return [];
       }
 
+      if (await isVCancellationRequested(cancellationToken)) {
+        return [];
+      }
       const fileFsPath = getFileFsPath(doc.uri);
-      const rawScriptDiagnostics = [
-        ...service.getSyntacticDiagnostics(fileFsPath),
-        ...service.getSemanticDiagnostics(fileFsPath)
+      const program = service.getProgram();
+      const sourceFile = program?.getSourceFile(fileFsPath);
+      if (!program || !sourceFile) {
+        return [];
+      }
+
+      let rawScriptDiagnostics = [
+        ...program.getSyntacticDiagnostics(sourceFile, cancellationToken?.tsToken),
+        ...program.getSemanticDiagnostics(sourceFile, cancellationToken?.tsToken),
+        ...service.getSuggestionDiagnostics(fileFsPath)
       ];
+
+      const compilerOptions = program.getCompilerOptions();
+      if (compilerOptions.declaration || compilerOptions.composite) {
+        rawScriptDiagnostics = [
+          ...rawScriptDiagnostics,
+          ...program.getDeclarationDiagnostics(sourceFile, cancellationToken?.tsToken)
+        ];
+      }
 
       return rawScriptDiagnostics.map(diag => {
         const tags: DiagnosticTag[] = [];
@@ -119,12 +195,15 @@ export async function getJavascriptMode(
         if (diag.reportsUnnecessary) {
           tags.push(DiagnosticTag.Unnecessary);
         }
+        if (diag.reportsDeprecated) {
+          tags.push(DiagnosticTag.Deprecated);
+        }
 
         // syntactic/semantic diagnostic always has start and length
         // so we can safely cast diag to TextSpan
         return <Diagnostic>{
           range: convertRange(scriptDoc, diag as ts.TextSpan),
-          severity: convertTSDiagnosticCategoryToDiagnosticSeverity(diag.category),
+          severity: convertTSDiagnosticCategoryToDiagnosticSeverity(tsModule, diag.category),
           message: tsModule.flattenDiagnosticMessageText(diag.messageText, '\n'),
           tags,
           code: diag.code,
@@ -145,8 +224,10 @@ export async function getJavascriptMode(
         return { isIncomplete: false, items: [] };
       }
       const completions = service.getCompletionsAtPosition(fileFsPath, offset, {
+        ...getUserPreferences(scriptDoc),
+        triggerCharacter: getTsTriggerCharacter(triggerChar),
         includeCompletionsWithInsertText: true,
-        includeCompletionsForModuleExports: _.get(config, ['vetur', 'completion', 'autoImport'])
+        includeCompletionsForModuleExports: env.getConfig().vetur.completion.autoImport
       });
       if (!completions) {
         return { isIncomplete: false, items: [] };
@@ -157,14 +238,18 @@ export async function getJavascriptMode(
         items: entries.map((entry, index) => {
           const range = entry.replacementSpan && convertRange(scriptDoc, entry.replacementSpan);
           const { label, detail } = calculateLabelAndDetailTextForPathImport(entry);
-          return {
+
+          const item: CompletionItem = {
             uri: doc.uri,
             position,
+            preselect: entry.isRecommended ? true : undefined,
             label,
             detail,
+            filterText: getFilterText(entry.insertText),
             sortText: entry.sortText + index,
             kind: toCompletionItemKind(entry.kind),
-            textEdit: range && TextEdit.replace(range, entry.name),
+            textEdit: range && TextEdit.replace(range, entry.insertText || entry.name),
+            insertText: entry.insertText,
             data: {
               // data used for resolving item details (see 'doResolve')
               languageId: scriptDoc.languageId,
@@ -172,22 +257,43 @@ export async function getJavascriptMode(
               offset,
               source: entry.source
             }
-          };
+          } as CompletionItem;
+
+          if (entry.kindModifiers) {
+            const kindModifiers = parseKindModifier(entry.kindModifiers ?? '');
+            if (kindModifiers.optional) {
+              if (!item.insertText) {
+                item.insertText = item.label;
+              }
+              if (!item.filterText) {
+                item.filterText = item.label;
+              }
+              item.label += '?';
+            }
+            if (kindModifiers.deprecated) {
+              item.tags = [CompletionItemTag.Deprecated];
+            }
+            if (kindModifiers.color) {
+              item.kind = CompletionItemKind.Color;
+            }
+          }
+
+          return item;
         })
       };
 
       function calculateLabelAndDetailTextForPathImport(entry: ts.CompletionEntry) {
         // Is import path completion
-        if (entry.kind === ts.ScriptElementKind.scriptElement) {
+        if (entry.kind === tsModule.ScriptElementKind.scriptElement) {
           if (entry.kindModifiers) {
             return {
               label: entry.name,
               detail: entry.name + entry.kindModifiers
             };
           } else {
-            if (entry.name.endsWith('.wpy')) {
+            if (entry.name.endsWith('.vue')) {
               return {
-                label: entry.name.slice(0, -'.wpy'.length),
+                label: entry.name.slice(0, -'.vue'.length),
                 detail: entry.name
               };
             }
@@ -201,31 +307,41 @@ export async function getJavascriptMode(
       }
     },
     doResolve(doc: TextDocument, item: CompletionItem): CompletionItem {
-      const { service } = updateCurrentVueTextDocument(doc);
+      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
       if (!languageServiceIncludesFile(service, doc.uri)) {
         return item;
       }
 
       const fileFsPath = getFileFsPath(doc.uri);
+
       const details = service.getCompletionEntryDetails(
         fileFsPath,
         item.data.offset,
         item.label,
-        getFormatCodeSettings(config),
+        getFormatCodeSettings(env.getConfig()),
         item.data.source,
-        {
-          importModuleSpecifierEnding: 'minimal',
-          importModuleSpecifierPreference: 'relative',
-          includeCompletionsWithInsertText: true
-        }
+        getUserPreferences(scriptDoc)
       );
+
       if (details && item.kind !== CompletionItemKind.File && item.kind !== CompletionItemKind.Folder) {
-        item.detail = tsModule.displayPartsToString(details.displayParts);
+        item.detail = Previewer.plain(tsModule.displayPartsToString(details.displayParts));
         const documentation: MarkupContent = {
           kind: 'markdown',
-          value: tsModule.displayPartsToString(details.documentation)
+          value: tsModule.displayPartsToString(details.documentation) + '\n\n'
         };
-        if (details.codeActions && config.vetur.completion.autoImport) {
+
+        if (details.tags) {
+          if (details.tags) {
+            details.tags.forEach(x => {
+              const tagDoc = Previewer.getTagDocumentation(x);
+              if (tagDoc) {
+                documentation.value += tagDoc + '\n\n';
+              }
+            });
+          }
+        }
+
+        if (details.codeActions && env.getConfig().vetur.completion.autoImport) {
           const textEdits = convertCodeAction(doc, details.codeActions, firstScriptRegion);
           item.additionalTextEdits = textEdits;
 
@@ -250,11 +366,27 @@ export async function getJavascriptMode(
       const info = service.getQuickInfoAtPosition(fileFsPath, scriptDoc.offsetAt(position));
       if (info) {
         const display = tsModule.displayPartsToString(info.displayParts);
-        const doc = tsModule.displayPartsToString(info.documentation);
         const markedContents: MarkedString[] = [{ language: 'ts', value: display }];
+
+        let hoverMdDoc = '';
+        const doc = Previewer.plain(tsModule.displayPartsToString(info.documentation));
         if (doc) {
-          markedContents.unshift(doc, '\n');
+          hoverMdDoc += doc + '\n\n';
         }
+
+        if (info.tags) {
+          info.tags.forEach(x => {
+            const tagDoc = Previewer.getTagDocumentation(x);
+            if (tagDoc) {
+              hoverMdDoc += tagDoc + '\n\n';
+            }
+          });
+        }
+
+        if (hoverMdDoc.trim() !== '') {
+          markedContents.push(hoverMdDoc);
+        }
+
         return {
           range: convertRange(scriptDoc, info.textSpan),
           contents: markedContents
@@ -269,39 +401,56 @@ export async function getJavascriptMode(
       }
 
       const fileFsPath = getFileFsPath(doc.uri);
-      const signHelp = service.getSignatureHelpItems(fileFsPath, scriptDoc.offsetAt(position), undefined);
-      if (!signHelp) {
+      const signatureHelpItems = service.getSignatureHelpItems(fileFsPath, scriptDoc.offsetAt(position), undefined);
+      if (!signatureHelpItems) {
         return NULL_SIGNATURE;
       }
-      const ret: SignatureHelp = {
-        activeSignature: signHelp.selectedItemIndex,
-        activeParameter: signHelp.argumentIndex,
-        signatures: []
-      };
-      signHelp.items.forEach(item => {
-        const signature: SignatureInformation = {
-          label: '',
-          documentation: undefined,
-          parameters: []
-        };
 
-        signature.label += tsModule.displayPartsToString(item.prefixDisplayParts);
+      const signatures: SignatureInformation[] = [];
+      signatureHelpItems.items.forEach(item => {
+        let sigLabel = '';
+        let sigMdDoc = '';
+        const sigParamemterInfos: ParameterInformation[] = [];
+
+        sigLabel += tsModule.displayPartsToString(item.prefixDisplayParts);
         item.parameters.forEach((p, i, a) => {
           const label = tsModule.displayPartsToString(p.displayParts);
           const parameter: ParameterInformation = {
             label,
             documentation: tsModule.displayPartsToString(p.documentation)
           };
-          signature.label += label;
-          signature.parameters!.push(parameter);
+          sigLabel += label;
+          sigParamemterInfos.push(parameter);
           if (i < a.length - 1) {
-            signature.label += tsModule.displayPartsToString(item.separatorDisplayParts);
+            sigLabel += tsModule.displayPartsToString(item.separatorDisplayParts);
           }
         });
-        signature.label += tsModule.displayPartsToString(item.suffixDisplayParts);
-        ret.signatures.push(signature);
+        sigLabel += tsModule.displayPartsToString(item.suffixDisplayParts);
+
+        item.tags
+          .filter(x => x.name !== 'param')
+          .forEach(x => {
+            const tagDoc = Previewer.getTagDocumentation(x);
+            if (tagDoc) {
+              sigMdDoc += tagDoc + '\n\n';
+            }
+          });
+
+        signatures.push({
+          label: sigLabel,
+          documentation: {
+            kind: 'markdown',
+            value: sigMdDoc
+          },
+          parameters: sigParamemterInfos
+        });
       });
-      return ret;
+
+      return {
+        activeSignature: signatureHelpItems.selectedItemIndex,
+        activeParameter: signatureHelpItems.argumentIndex,
+        signatures
+      };
     },
     findDocumentHighlight(doc: TextDocument, position: Position): DocumentHighlight[] {
       const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
@@ -381,7 +530,7 @@ export async function getJavascriptMode(
       definitions.forEach(d => {
         const definitionTargetDoc = getSourceDoc(d.fileName, program);
         definitionResults.push({
-          uri: Uri.file(d.fileName).toString(),
+          uri: URI.file(d.fileName).toString(),
           range: convertRange(definitionTargetDoc, d.textSpan)
         });
       });
@@ -408,82 +557,146 @@ export async function getJavascriptMode(
         const referenceTargetDoc = getSourceDoc(r.fileName, program);
         if (referenceTargetDoc) {
           referenceResults.push({
-            uri: Uri.file(r.fileName).toString(),
+            uri: URI.file(r.fileName).toString(),
             range: convertRange(referenceTargetDoc, r.textSpan)
           });
         }
       });
       return referenceResults;
     },
+    getFoldingRanges(doc) {
+      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      if (!languageServiceIncludesFile(service, doc.uri)) {
+        return [];
+      }
+
+      const fileFsPath = getFileFsPath(doc.uri);
+      const spans = service.getOutliningSpans(fileFsPath);
+
+      return spans.map(s => {
+        const range = convertRange(scriptDoc, s.textSpan);
+        const kind = getFoldingRangeKind(s);
+
+        // https://github.com/vuejs/vetur/issues/2303
+        const endLine =
+          range.end.character > 0 &&
+          ['}', ']'].includes(
+            scriptDoc.getText(Range.create(Position.create(range.end.line, range.end.character - 1), range.end))
+          )
+            ? Math.max(range.end.line - 1, range.start.line)
+            : range.end.line;
+
+        return {
+          startLine: range.start.line,
+          startCharacter: range.start.character,
+          endLine,
+          endCharacter: range.end.character,
+          kind
+        };
+      });
+    },
     getCodeActions(doc, range, _formatParams, context) {
       const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
       const fileName = getFileFsPath(scriptDoc.uri);
       const start = scriptDoc.offsetAt(range.start);
       const end = scriptDoc.offsetAt(range.end);
+      const textRange = { pos: start, end };
+      const preferences = getUserPreferences(scriptDoc);
       if (!supportedCodeFixCodes) {
         supportedCodeFixCodes = new Set(
-          ts
+          tsModule
             .getSupportedCodeFixes()
             .map(Number)
             .filter(x => !isNaN(x))
         );
       }
-      const fixableDiagnosticCodes = context.diagnostics.map(d => +d.code!).filter(c => supportedCodeFixCodes.has(c));
-      if (!fixableDiagnosticCodes) {
-        return [];
-      }
+      const formatSettings: ts.FormatCodeSettings = getFormatCodeSettings(env.getConfig());
 
-      const formatSettings: ts.FormatCodeSettings = getFormatCodeSettings(config);
-
-      const result: Command[] = [];
-      const fixes = service.getCodeFixesAtPosition(
+      const result: CodeAction[] = [];
+      provideQuickFixCodeActions(
+        doc.uri,
+        scriptDoc.languageId as LanguageId,
         fileName,
-        start,
-        end,
-        fixableDiagnosticCodes,
+        textRange,
+        context,
+        supportedCodeFixCodes,
         formatSettings,
-        /*preferences*/ {}
+        preferences,
+        service,
+        result
       );
-      collectQuickFixCommands(fixes, service, result);
-
-      const textRange = { pos: start, end };
-      const refactorings = service.getApplicableRefactors(fileName, textRange, /*preferences*/ {});
-      collectRefactoringCommands(refactorings, fileName, formatSettings, textRange, result);
+      provideRefactoringCodeActions(
+        doc.uri,
+        scriptDoc.languageId as LanguageId,
+        fileName,
+        textRange,
+        context,
+        preferences,
+        service,
+        result
+      );
+      provideOrganizeImports(doc.uri, scriptDoc.languageId as LanguageId, textRange, context, result);
 
       return result;
     },
-    getRefactorEdits(doc: TextDocument, args: RefactorAction) {
-      const { service } = updateCurrentVueTextDocument(doc);
-      const response = service.getEditsForRefactor(
-        args.fileName,
-        args.formatOptions,
-        args.textRange,
-        args.refactorName,
-        args.actionName,
-        args.preferences
-      );
-      if (!response) {
-        // TODO: What happens when there's no response?
-        return createApplyCodeActionCommand('', {});
+    doCodeActionResolve(doc, action) {
+      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      if (!languageServiceIncludesFile(service, doc.uri)) {
+        return action;
       }
-      const uriMapping = createUriMappingForEdits(response.edits, service);
-      return createApplyCodeActionCommand('', uriMapping);
+
+      const formatSettings: ts.FormatCodeSettings = getFormatCodeSettings(env.getConfig());
+      const preferences = getUserPreferences(scriptDoc);
+
+      const fileFsPath = getFileFsPath(doc.uri);
+      const data = action.data as CodeActionData;
+
+      if (data.kind === CodeActionDataKind.CombinedCodeFix) {
+        const combinedFix = service.getCombinedCodeFix(
+          { type: 'file', fileName: fileFsPath },
+          data.fixId,
+          formatSettings,
+          preferences
+        );
+
+        action.edit = { changes: createUriMappingForEdits(combinedFix.changes.slice(), service) };
+      }
+      if (data.kind === CodeActionDataKind.RefactorAction) {
+        const refactor = service.getEditsForRefactor(
+          fileFsPath,
+          formatSettings,
+          data.textRange,
+          data.refactorName,
+          data.actionName,
+          preferences
+        );
+        if (refactor) {
+          action.edit = { changes: createUriMappingForEdits(refactor.edits, service) };
+        }
+      }
+      if (data.kind === CodeActionDataKind.OrganizeImports) {
+        const response = service.organizeImports({ type: 'file', fileName: fileFsPath }, formatSettings, preferences);
+        action.edit = { changes: createUriMappingForEdits(response.slice(), service) };
+      }
+
+      delete action.data;
+      return action;
     },
     format(doc: TextDocument, range: Range, formatParams: FormattingOptions): TextEdit[] {
       const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
 
       const defaultFormatter =
         scriptDoc.languageId === 'javascript'
-          ? config.vetur.format.defaultFormatter.js
-          : config.vetur.format.defaultFormatter.ts;
+          ? env.getConfig().vetur.format.defaultFormatter.js
+          : env.getConfig().vetur.format.defaultFormatter.ts;
 
       if (defaultFormatter === 'none') {
         return [];
       }
 
-      const parser = scriptDoc.languageId === 'javascript' ? 'babylon' : 'typescript';
-      const needInitialIndent = config.vetur.format.scriptInitialIndent;
-      const vlsFormatConfig: VLSFormatConfig = config.vetur.format;
+      const parser = scriptDoc.languageId === 'javascript' ? 'babel' : 'typescript';
+      const needInitialIndent = env.getConfig().vetur.format.scriptInitialIndent;
+      const vlsFormatConfig: VLSFormatConfig = env.getConfig().vetur.format;
 
       if (
         defaultFormatter === 'prettier' ||
@@ -500,11 +713,11 @@ export async function getJavascriptMode(
         } else {
           doFormat = prettierify;
         }
-        return doFormat(code, filePath, range, vlsFormatConfig, parser, needInitialIndent);
+        return doFormat(dependencyService, code, filePath, range, vlsFormatConfig, parser, needInitialIndent);
       } else {
         const initialIndentLevel = needInitialIndent ? 1 : 0;
         const formatSettings: ts.FormatCodeSettings =
-          scriptDoc.languageId === 'javascript' ? config.javascript.format : config.typescript.format;
+          scriptDoc.languageId === 'javascript' ? env.getConfig().javascript.format : env.getConfig().typescript.format;
         const convertedFormatSettings = convertOptions(
           formatSettings,
           {
@@ -540,76 +753,269 @@ export async function getJavascriptMode(
     onDocumentChanged(filePath: string) {
       serviceHost.updateExternalDocument(filePath);
     },
+    getRenameFileEdit(rename: FileRename): TextDocumentEdit[] {
+      const oldPath = getFileFsPath(rename.oldUri);
+      const newPath = getFileFsPath(rename.newUri);
+
+      const service = serviceHost.getLanguageService();
+      const program = service.getProgram();
+      if (!program) {
+        return [];
+      }
+
+      const sourceFile = program.getSourceFile(oldPath);
+      if (!sourceFile) {
+        return [];
+      }
+
+      const oldFileIsVue = isVueFile(oldPath);
+      const formatSettings: ts.FormatCodeSettings = getFormatCodeSettings(env.getConfig());
+      const preferences = getUserPreferencesByLanguageId(
+        (sourceFile as any).scriptKind === tsModule.ScriptKind.JS ? 'javascript' : 'typescript'
+      );
+
+      // typescript use the filename of the source file to check for update
+      // match it or it may not work on windows
+      const normalizedOldPath = sourceFile.fileName;
+      const edits = service.getEditsForFileRename(normalizedOldPath, newPath, formatSettings, preferences);
+
+      const textDocumentEdit: TextDocumentEdit[] = [];
+      for (const edit of edits) {
+        const fileName = edit.fileName;
+        if (isVirtualVueTemplateFile(fileName)) {
+          continue;
+        }
+        const doc = getSourceDoc(fileName, program);
+        const bothNotVueFile = !oldFileIsVue && !isVueFile(fileName);
+        if (bothNotVueFile) {
+          continue;
+        }
+        const docIdentifier = VersionedTextDocumentIdentifier.create(URI.file(doc.uri).toString(), 0);
+        textDocumentEdit.push(
+          ...edit.textChanges.map(({ span, newText }) => {
+            const range = Range.create(doc.positionAt(span.start), doc.positionAt(span.start + span.length));
+            return TextDocumentEdit.create(docIdentifier, [TextEdit.replace(range, newText)]);
+          })
+        );
+      }
+
+      return textDocumentEdit;
+    },
+    getSemanticTokens(doc: TextDocument, range?: Range) {
+      const { scriptDoc, service } = updateCurrentVueTextDocument(doc);
+      const scriptText = scriptDoc.getText();
+      if (scriptText.trim().length > SEMANTIC_TOKEN_CONTENT_LENGTH_LIMIT) {
+        return [];
+      }
+
+      const fileFsPath = getFileFsPath(doc.uri);
+      const textSpan = range
+        ? convertTextSpan(range, scriptDoc)
+        : {
+            start: 0,
+            length: scriptText.length
+          };
+      const { spans } = service.getEncodedSemanticClassifications(
+        fileFsPath,
+        textSpan,
+        tsModule.SemanticClassificationFormat.TwentyTwenty
+      );
+
+      const data: SemanticTokenOffsetData[] = [];
+      let index = 0;
+
+      while (index < spans.length) {
+        // [start, length, encodedClassification, start2, length2, encodedClassification2]
+        const start = spans[index++];
+        const length = spans[index++];
+        const encodedClassification = spans[index++];
+        const classificationType = getTokenTypeFromClassification(encodedClassification);
+        if (classificationType < 0) {
+          continue;
+        }
+
+        const modifierSet = getTokenModifierFromClassification(encodedClassification);
+
+        data.push({
+          start,
+          length,
+          classificationType,
+          modifierSet
+        });
+      }
+
+      const program = service.getProgram();
+      if (program) {
+        addCompositionApiRefTokens(tsModule, program, fileFsPath, data);
+      }
+
+      return data.map(({ start, ...rest }) => {
+        const startPosition = scriptDoc.positionAt(start);
+
+        return {
+          ...rest,
+          line: startPosition.line,
+          character: startPosition.character
+        };
+      });
+    },
     dispose() {
       jsDocuments.dispose();
     }
   };
 }
 
-function collectRefactoringCommands(
-  refactorings: ts.ApplicableRefactorInfo[],
+function provideRefactoringCodeActions(
+  uri: string,
+  languageId: LanguageId,
   fileName: string,
-  formatSettings: any,
   textRange: { pos: number; end: number },
-  result: Command[]
+  context: CodeActionContext,
+  preferences: ts.UserPreferences,
+  service: ts.LanguageService,
+  result: CodeAction[]
 ) {
-  const actions: RefactorAction[] = [];
+  if (
+    context.only &&
+    !context.only.some(el =>
+      [
+        CodeActionKind.Refactor,
+        CodeActionKind.RefactorExtract,
+        CodeActionKind.RefactorInline,
+        CodeActionKind.RefactorRewrite
+      ].includes(el)
+    )
+  ) {
+    return;
+  }
+
+  const refactorings = service.getApplicableRefactors(
+    fileName,
+    textRange,
+    preferences,
+    !context.only ? undefined : 'invoked'
+  );
+
+  const actions: RefactorActionData[] = [];
   for (const refactoring of refactorings) {
     const refactorName = refactoring.name;
     if (refactoring.inlineable) {
       actions.push({
-        fileName,
-        formatOptions: formatSettings,
+        uri,
+        kind: CodeActionDataKind.RefactorAction,
+        languageId,
         textRange,
         refactorName,
         actionName: refactorName,
-        preferences: {},
         description: refactoring.description
       });
     } else {
       actions.push(
         ...refactoring.actions.map(action => ({
-          fileName,
-          formatOptions: formatSettings,
+          uri,
+          kind: CodeActionDataKind.RefactorAction as const,
+          languageId,
           textRange,
           refactorName,
           actionName: action.name,
-          preferences: {},
-          description: action.description
+          description: action.description,
+          notApplicableReason: action.notApplicableReason
         }))
       );
     }
   }
   for (const action of actions) {
     result.push({
-      command: 'vetur.chooseTypeScriptRefactoring',
       title: action.description,
-      arguments: [action]
+      kind: getCodeActionKind(action),
+      disabled: action.notApplicableReason ? { reason: action.notApplicableReason } : undefined,
+      data: action
     });
   }
 }
 
-function collectQuickFixCommands(
-  fixes: ReadonlyArray<ts.CodeFixAction>,
+function provideQuickFixCodeActions(
+  uri: string,
+  languageId: LanguageId,
+  fileName: string,
+  textRange: { pos: number; end: number },
+  context: CodeActionContext,
+  supportedCodeFixCodes: Set<number>,
+  formatSettings: ts.FormatCodeSettings,
+  preferences: ts.UserPreferences,
   service: ts.LanguageService,
-  result: Command[]
+  result: CodeAction[]
 ) {
+  if (context.only && !context.only.includes(CodeActionKind.QuickFix)) {
+    return;
+  }
+
+  const fixableDiagnosticCodes = context.diagnostics.map(d => +d.code!).filter(c => supportedCodeFixCodes.has(c));
+  if (!fixableDiagnosticCodes) {
+    return;
+  }
+
+  const fixes = service.getCodeFixesAtPosition(
+    fileName,
+    textRange.pos,
+    textRange.end,
+    fixableDiagnosticCodes,
+    formatSettings,
+    preferences
+  );
+
   for (const fix of fixes) {
     const uriTextEditMapping = createUriMappingForEdits(fix.changes, service);
-    result.push(createApplyCodeActionCommand(fix.description, uriTextEditMapping));
+    result.push({
+      title: fix.description,
+      kind: CodeActionKind.QuickFix,
+      diagnostics: context.diagnostics,
+      edit: {
+        changes: uriTextEditMapping
+      }
+    });
+
+    if (fix.fixAllDescription && fix.fixId) {
+      result.push({
+        title: fix.fixAllDescription,
+        kind: CodeActionKind.QuickFix,
+        diagnostics: context.diagnostics,
+        data: {
+          uri,
+          languageId,
+          kind: CodeActionDataKind.CombinedCodeFix,
+          textRange,
+          fixId: fix.fixId
+        }
+      });
+    }
   }
 }
 
-function createApplyCodeActionCommand(title: string, uriTextEditMapping: Record<string, TextEdit[]>): Command {
-  return {
-    title,
-    command: 'vetur.applyWorkspaceEdits',
-    arguments: [
-      {
-        changes: uriTextEditMapping
-      }
-    ]
-  };
+function provideOrganizeImports(
+  uri: string,
+  languageId: LanguageId,
+  textRange: { pos: number; end: number },
+  context: CodeActionContext,
+  result: CodeAction[]
+) {
+  if (
+    !context.only ||
+    (!context.only.includes(CodeActionKind.SourceOrganizeImports) && !context.only.includes(CodeActionKind.Source))
+  ) {
+    return;
+  }
+
+  result.push({
+    title: 'Organize Imports',
+    kind: CodeActionKind.SourceOrganizeImports,
+    data: {
+      uri,
+      languageId,
+      textRange,
+      kind: CodeActionDataKind.OrganizeImports
+    } as OrganizeImportsActionData
+  });
 }
 
 function createUriMappingForEdits(changes: ts.FileTextChanges[], service: ts.LanguageService) {
@@ -621,7 +1027,7 @@ function createUriMappingForEdits(changes: ts.FileTextChanges[], service: ts.Lan
       newText,
       range: convertRange(targetDoc, span)
     }));
-    const uri = Uri.file(fileName).toString();
+    const uri = URI.file(fileName).toString();
     if (result[uri]) {
       result[uri].push(...edits);
     } else {
@@ -665,8 +1071,18 @@ function getFormatCodeSettings(config: any): ts.FormatCodeSettings {
   return {
     tabSize: config.vetur.format.options.tabSize,
     indentSize: config.vetur.format.options.tabSize,
-    convertTabsToSpaces: !config.vetur.format.options.useTabs
+    convertTabsToSpaces: !config.vetur.format.options.useTabs,
+    insertSpaceAfterCommaDelimiter: true
   };
+}
+
+// Parameter must to be string, Otherwise I don't like it semantically.
+function getTsTriggerCharacter(triggerChar: string) {
+  const legalChars = ['@', '#', '.', '"', "'", '`', '/', '<'];
+  if (legalChars.includes(triggerChar)) {
+    return triggerChar as ts.CompletionsTriggerCharacter;
+  }
+  return undefined;
 }
 
 function convertCodeAction(
@@ -703,15 +1119,79 @@ function convertCodeAction(
   return textEdits;
 }
 
-function convertTSDiagnosticCategoryToDiagnosticSeverity(c: ts.DiagnosticCategory) {
+function parseKindModifier(kindModifiers: string) {
+  const kinds = new Set(kindModifiers.split(/,|\s+/g));
+
+  return {
+    optional: kinds.has('optional'),
+    deprecated: kinds.has('deprecated'),
+    color: kinds.has('color')
+  };
+}
+
+function convertTSDiagnosticCategoryToDiagnosticSeverity(
+  tsModule: RuntimeLibrary['typescript'],
+  c: ts.DiagnosticCategory
+) {
   switch (c) {
-    case ts.DiagnosticCategory.Error:
+    case tsModule.DiagnosticCategory.Error:
       return DiagnosticSeverity.Error;
-    case ts.DiagnosticCategory.Warning:
+    case tsModule.DiagnosticCategory.Warning:
       return DiagnosticSeverity.Warning;
-    case ts.DiagnosticCategory.Message:
+    case tsModule.DiagnosticCategory.Message:
       return DiagnosticSeverity.Information;
-    case ts.DiagnosticCategory.Suggestion:
+    case tsModule.DiagnosticCategory.Suggestion:
       return DiagnosticSeverity.Hint;
+    default:
+      return DiagnosticSeverity.Error;
   }
+}
+
+/* tslint:disable:max-line-length */
+/**
+ * Adapted from https://github.com/microsoft/vscode/blob/2b090abd0fdab7b21a3eb74be13993ad61897f84/extensions/typescript-language-features/src/languageFeatures/completions.ts#L147-L181
+ */
+function getFilterText(insertText: string | undefined): string | undefined {
+  // For `this.` completions, generally don't set the filter text since we don't want them to be overly prioritized. #74164
+  if (insertText?.startsWith('this.')) {
+    return undefined;
+  }
+
+  // Handle the case:
+  // ```
+  // const xyz = { 'ab c': 1 };
+  // xyz.ab|
+  // ```
+  // In which case we want to insert a bracket accessor but should use `.abc` as the filter text instead of
+  // the bracketed insert text.
+  else if (insertText?.startsWith('[')) {
+    return insertText.replace(/^\[['"](.+)[['"]\]$/, '.$1');
+  }
+
+  // In all other cases, fallback to using the insertText
+  return insertText;
+}
+
+function getFoldingRangeKind(span: ts.OutliningSpan): FoldingRangeKind | undefined {
+  switch (span.kind) {
+    case 'comment':
+      return FoldingRangeKind.Comment;
+    case 'region':
+      return FoldingRangeKind.Region;
+    case 'imports':
+      return FoldingRangeKind.Imports;
+    case 'code':
+    default:
+      return undefined;
+  }
+}
+
+function convertTextSpan(range: Range, doc: TextDocument): ts.TextSpan {
+  const start = doc.offsetAt(range.start);
+  const end = doc.offsetAt(range.end);
+
+  return {
+    start,
+    length: end - start
+  };
 }

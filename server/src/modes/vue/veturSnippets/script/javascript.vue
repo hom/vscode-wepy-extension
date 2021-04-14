@@ -1,7 +1,5 @@
 <script>
-import wepy from '@wepy/core';
-
-wepy.page({
+export default {
 \t${0}
-})
+}
 </script>

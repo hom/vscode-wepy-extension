@@ -1,5 +1,5 @@
-import { TextDocument } from 'vscode-languageserver-types';
-import * as assert from 'assert';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import assert from 'assert';
 import { parseVueDocumentRegions } from '../vueDocumentRegionParser';
 import { getSingleLanguageDocument, getSingleTypeDocument, getLanguageRangesOfType } from '../embeddedSupport';
 
@@ -133,5 +133,75 @@ suite('External Source', () => {
     const { importedScripts } = parseVueDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, src));
 
     assert.equal(importedScripts[0], './external.js');
+  });
+});
+
+suite('Template region positions', () => {
+  const htmlSrc = `
+<template>
+  <p>Test</p>
+</template>
+`;
+
+  test('vue-html region positions', () => {
+    const { regions } = parseVueDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, htmlSrc));
+
+    assert.equal(regions[0].languageId, 'vue-html');
+    assert.equal(
+      htmlSrc.slice(regions[0].start, regions[0].end),
+      [
+        // prettier-ignore
+        '',
+        '  <p>Test</p>',
+        ''
+      ].join('\n')
+    );
+  });
+
+  const pugSrc = `
+<template lang="pug">
+p Test
+</template>
+`;
+
+  test('pug region positions', () => {
+    const { regions } = parseVueDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, pugSrc));
+
+    assert.equal(regions[0].languageId, 'pug');
+    assert.equal(
+      pugSrc.slice(regions[0].start, regions[0].end),
+      [
+        // prettier-ignore
+        '',
+        'p Test',
+        ''
+      ].join('\n')
+    );
+  });
+});
+
+suite('Embedded <template> ', () => {
+  const htmlSrc = `
+<template>
+  <template>
+    <p>Test</p>
+  </template>
+</template>
+`;
+  test('vue-html region positions', () => {
+    const { regions } = parseVueDocumentRegions(TextDocument.create('test://test.vue', 'vue', 0, htmlSrc));
+
+    assert.equal(regions[0].languageId, 'vue-html');
+    assert.equal(
+      htmlSrc.slice(regions[0].start, regions[0].end),
+      [
+        // prettier-ignore
+        '',
+        '  <template>',
+        '    <p>Test</p>',
+        '  </template>',
+        ''
+      ].join('\n')
+    );
   });
 });

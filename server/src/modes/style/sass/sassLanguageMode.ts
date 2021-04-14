@@ -1,39 +1,49 @@
 import { LanguageMode } from '../../../embeddedSupport/languageModes';
 
-import { TextDocument, Range, FormattingOptions } from 'vscode-languageserver-types/lib/umd/main';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { Range, FormattingOptions, CompletionList } from 'vscode-languageserver-types';
 
-import { TextEdit } from 'vscode-css-languageservice';
+import { TextEdit, Position } from 'vscode-css-languageservice';
 
 import { SassFormatter, SassFormatterConfig } from 'sass-formatter';
 
-export class SassLanguageMode implements LanguageMode {
-  private config: any = {};
+import * as emmet from 'vscode-emmet-helper';
+import { Priority } from '../emmet';
+import { EnvironmentService } from '../../../services/EnvironmentService';
 
-  constructor() {}
+export class SassLanguageMode implements LanguageMode {
+  constructor(private env: EnvironmentService) {}
 
   getId() {
     return 'sass';
   }
 
-  configure(c: any) {
-    this.config = c;
+  doComplete(document: TextDocument, position: Position): CompletionList {
+    const emmetCompletions = emmet.doComplete(document, position, 'sass', this.env.getConfig().emmet);
+    if (!emmetCompletions) {
+      return { isIncomplete: false, items: [] };
+    } else {
+      const emmetItems = emmetCompletions.items.map(i => {
+        return {
+          ...i,
+          sortText: Priority.Emmet + i.label
+        };
+      });
+      return {
+        isIncomplete: emmetCompletions.isIncomplete,
+        items: emmetItems
+      };
+    }
   }
 
   format(document: TextDocument, range: Range, formattingOptions: FormattingOptions) {
-    const sassConfig: SassFormatterConfig = {
-      convert: true,
-      deleteEmptyRows: true,
-      deleteWhitespace: true,
-      debug: false,
-      insertSpaces: formattingOptions.insertSpaces,
-      tabSize: formattingOptions.tabSize,
-      setPropertySpace: true
-    };
-
-    Object.assign(sassConfig, this.config.sass.format);
-
-    if (this.config.vetur.format.defaultFormatter.sass === 'sass-formatter') {
-      return [TextEdit.replace(range, SassFormatter.Format(document.getText(range), sassConfig))];
+    if (this.env.getConfig().vetur.format.defaultFormatter.sass === 'sass-formatter') {
+      return [
+        TextEdit.replace(
+          range,
+          SassFormatter.Format(document.getText(range), { ...formattingOptions, ...this.env.getConfig()?.sass?.format })
+        )
+      ];
     }
     return [];
   }

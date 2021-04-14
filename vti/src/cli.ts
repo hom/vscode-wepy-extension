@@ -1,164 +1,39 @@
-import {
-  InitializeParams,
-  InitializeRequest,
-  InitializeResult,
-  createProtocolConnection,
-  StreamMessageReader,
-  StreamMessageWriter,
-  Logger,
-  DidOpenTextDocumentNotification,
-  Diagnostic,
-  DiagnosticSeverity
-} from 'vscode-languageserver-protocol';
-import { createConnection } from 'vscode-languageserver';
-import { Duplex } from 'stream';
-import { VLS } from 'vls';
-import { params } from './initParams';
-import * as fs from 'fs';
-import Uri from 'vscode-uri';
-import * as glob from 'glob';
-import * as path from 'path';
-import * as chalk from 'chalk';
+import { Command, Option } from 'commander';
+import { diagnostics, LogLevel, logLevels } from './commands/diagnostics';
 
-class NullLogger implements Logger {
-  error(_message: string): void {}
-  warn(_message: string): void {}
-  info(_message: string): void {}
-  log(_message: string): void {}
+function getVersion(): string {
+  const { version }: { version: string } = require('../package.json');
+  return `v${version}`;
 }
 
-class TestStream extends Duplex {
-  _write(chunk: string, _encoding: string, done: () => void) {
-    this.emit('data', chunk);
-    done();
-  }
-
-  _read(_size: number) {}
-}
-
-async function prepareClientConnection(workspaceUri: Uri) {
-  const up = new TestStream();
-  const down = new TestStream();
-  const logger = new NullLogger();
-
-  const clientConnection = createProtocolConnection(new StreamMessageReader(down), new StreamMessageWriter(up), logger);
-
-  const serverConnection = createConnection(new StreamMessageReader(up), new StreamMessageWriter(down));
-  const vls = new VLS(serverConnection as any);
-
-  serverConnection.onInitialize(
-    async (params: InitializeParams): Promise<InitializeResult> => {
-      await vls.init(params);
-
-      console.log('Vetur initialized');
-
-      return {
-        capabilities: vls.capabilities
-      };
-    }
-  );
-
-  vls.listen();
-  clientConnection.listen();
-
-  const init: InitializeParams = {
-    rootPath: workspaceUri.fsPath,
-    rootUri: workspaceUri.toString(),
-    ...params
-  } as InitializeParams;
-
-  await clientConnection.sendRequest(InitializeRequest.type, init);
-
-  return clientConnection;
-}
-
-async function getDiagnostics(workspaceUri: Uri) {
-  const clientConnection = await prepareClientConnection(workspaceUri);
-
-  const files = glob.sync('**/*.wpy', { cwd: workspaceUri.fsPath, ignore: ['node_modules/**'] });
-  const absFilePaths = files.map(f => path.resolve(workspaceUri.fsPath, f));
-
-  console.log('');
-  let errCount = 0;
-
-  for (const absFilePath of absFilePaths) {
-    await clientConnection.sendNotification(DidOpenTextDocumentNotification.type, {
-      textDocument: {
-        languageId: 'vue',
-        uri: Uri.file(absFilePath).toString(),
-        version: 1,
-        text: fs.readFileSync(absFilePath, 'utf-8')
-      }
-    });
-
-    try {
-      const res = (await clientConnection.sendRequest('$/getDiagnostics', {
-        uri: Uri.file(absFilePath).toString()
-      })) as Diagnostic[];
-      if (res.length > 0) {
-        console.log('');
-        console.log(`${chalk.green('File')} : ${chalk.green(absFilePath)}`);
-        res.forEach(d => {
-          /**
-           * Ignore eslint errors for now
-           */
-          if (d.source === 'eslint-plugin-vue') {
-            return;
-          }
-          if (d.severity === DiagnosticSeverity.Error) {
-            console.log(`${chalk.red('Error')}: ${d.message}`);
-            errCount++;
-          } else {
-            console.log(`${chalk.yellow('Warn')} : ${d.message}`);
-          }
-        });
-        console.log('');
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  return errCount;
+function validateLogLevel(logLevelInput: unknown): logLevelInput is LogLevel {
+  return typeof logLevelInput === 'string' && (logLevels as ReadonlyArray<string>).includes(logLevelInput);
 }
 
 (async () => {
-  const myArgs = process.argv.slice(2);
-  // no args
-  if (myArgs.length === 0) {
-    console.log('Vetur Terminal Interface');
-    console.log('');
-    console.log('Usage:');
-    console.log('');
-    console.log('  vti diagnostics ---- Print all diagnostics');
-    console.log('');
-  }
-  // vls diagnostics
-  else if (myArgs[0] === 'diagnostics') {
-    console.log('Getting Vetur diagnostics');
-    let workspaceUri;
+  const program = new Command();
+  program.name('vti').description('Vetur Terminal Interface').version(getVersion());
 
-    if (myArgs[1]) {
-      console.log(`Loading Vetur in workspace path: ${myArgs[1]}`);
-      workspaceUri = Uri.file(myArgs[1]);
-    } else {
-      console.log(`Loading Vetur in current directory: ${process.cwd()}`);
-      workspaceUri = Uri.file(process.cwd());
-    }
+  program
+    .command('diagnostics [workspace]')
+    .description('Print all diagnostics')
+    .addOption(
+      new Option('-l, --log-level <logLevel>', 'Log level to print')
+        .default('WARN')
+        // logLevels is readonly array but .choices need read-write array (because of weak typing)
+        .choices((logLevels as unknown) as string[])
+    )
+    .action(async (workspace, options) => {
+      const logLevelOption: unknown = options.logLevel;
+      if (!validateLogLevel(logLevelOption)) {
+        throw new Error(`Invalid log level: ${logLevelOption}`);
+      }
+      await diagnostics(workspace, logLevelOption);
+    });
 
-    console.log('');
-    console.log('====================================');
-    const errCount = await getDiagnostics(workspaceUri);
-    console.log('====================================');
-
-    if (errCount === 0) {
-      console.log(chalk.green(`VTI found no error`));
-      process.exit(0);
-    } else {
-      console.log(chalk.red(`VTI found ${errCount} ${errCount === 1 ? 'error' : 'errors'}`));
-      process.exit(1);
-    }
-  }
-})().catch(_err => {
-  console.error('VTI operation failed');
+  program.parse(process.argv);
+})().catch(err => {
+  console.error(`VTI operation failed with error`);
+  console.error(err.stack);
+  process.exit(1);
 });

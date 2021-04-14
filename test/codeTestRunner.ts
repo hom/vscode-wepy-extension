@@ -1,8 +1,7 @@
-import * as path from 'path';
-import * as cp from 'child_process';
-import * as fs from 'fs';
-import * as $ from 'shelljs';
-import * as minimist from 'minimist';
+import path from 'path';
+import fs from 'fs';
+import $ from 'shelljs';
+import minimist from 'minimist';
 
 import { downloadAndUnzipVSCode, runTests } from 'vscode-test';
 
@@ -13,12 +12,12 @@ const EXT_ROOT = path.resolve(__dirname, '../../');
 
 async function run(execPath: string, testWorkspaceRelativePath: string, mochaArgs: any): Promise<number> {
   const testWorkspace = path.resolve(EXT_ROOT, testWorkspaceRelativePath, 'fixture');
-  const extTestPath = path.resolve(EXT_ROOT, 'dist', testWorkspaceRelativePath);
+  const extTestPath = path.resolve(EXT_ROOT, 'dist-test', testWorkspaceRelativePath);
   const userDataDir = path.resolve(EXT_ROOT, testWorkspaceRelativePath, 'data-dir');
 
   const args = [testWorkspace, '--locale=en', '--disable-extensions', `--user-data-dir=${userDataDir}`];
 
-  console.log(`Test folder: ${path.join('dist', testWorkspaceRelativePath)}`);
+  console.log(`Test folder: ${path.join('dist-test', testWorkspaceRelativePath)}`);
   console.log(`Workspace:   ${testWorkspaceRelativePath}`);
   if (fs.existsSync(userDataDir)) {
     console.log(`Data dir:    ${userDataDir}`);
@@ -26,6 +25,7 @@ async function run(execPath: string, testWorkspaceRelativePath: string, mochaArg
 
   return await runTests({
     vscodeExecutablePath: execPath,
+    version: '1.53.2',
     extensionDevelopmentPath: EXT_ROOT,
     extensionTestsPath: extTestPath,
     extensionTestsEnv: mochaArgs,
@@ -34,6 +34,8 @@ async function run(execPath: string, testWorkspaceRelativePath: string, mochaArg
 }
 
 async function runAllTests(execPath: string) {
+  let exitCode = 0;
+
   const testDirs = fs.readdirSync(path.resolve(EXT_ROOT, './test')).filter(p => !p.includes('.'));
 
   const argv = minimist(process.argv.slice(2));
@@ -52,7 +54,6 @@ async function runAllTests(execPath: string) {
       await run(execPath, `test/${targetDir}`, mochaArgs);
     } catch (err) {
       console.error(err);
-      process.exit(1);
     }
   } else {
     for (const dir of testDirs) {
@@ -61,10 +62,12 @@ async function runAllTests(execPath: string) {
         await run(execPath, `test/${dir}`, mochaArgs);
       } catch (err) {
         console.error(err);
-        process.exit(1);
+        exitCode = 1;
       }
     }
   }
+
+  process.exit(exitCode);
 }
 
 function installMissingDependencies(fixturePath: string) {
@@ -78,7 +81,7 @@ function installMissingDependencies(fixturePath: string) {
 }
 
 async function go() {
-  const execPath = await downloadAndUnzipVSCode('stable');
+  const execPath = await downloadAndUnzipVSCode('1.53.2');
   await runAllTests(execPath);
 }
 

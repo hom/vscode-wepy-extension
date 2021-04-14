@@ -1,4 +1,4 @@
-import { TextDocument } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getFileFsPath } from '../utils/paths';
 import { Definition } from 'vscode-languageserver-types';
 import { LanguageModes } from '../embeddedSupport/languageModes';
@@ -18,8 +18,15 @@ export interface ComponentInfo {
   name?: string;
   definition?: Definition;
 
+  insertInOptionAPIPos?: number;
+  componentsDefine?: {
+    start: number;
+    end: number;
+    insertPos: number;
+  };
   childComponents?: ChildComponent[];
 
+  emits?: EmitInfo[];
   /**
    * Todo: Extract type info in cases like
    * props: {
@@ -40,12 +47,46 @@ export interface ChildComponent {
     start: number;
     end: number;
   };
+  global: boolean;
   info?: VueFileInfo;
+}
+
+export interface EmitInfo {
+  name: string;
+  /**
+   * `true` if
+   * emits: {
+   *   foo: (...) => {...}
+   * }
+   *
+   * `false` if
+   * - `emits: ['foo']`
+   * - `@Emit()`
+   * - `emits: { foo: null }`
+   */
+  hasValidator: boolean;
+  documentation?: string;
+  typeString?: string;
 }
 
 export interface PropInfo {
   name: string;
+  /**
+   * `true` if
+   * props: {
+   *   foo: { ... }
+   * }
+   *
+   * `false` if
+   * - `props: ['foo']`
+   * - `props: { foo: String }`
+   *
+   */
+  hasObjectValidator: boolean;
+  required: boolean;
+  isBoundToModel: boolean;
   documentation?: string;
+  typeString?: string;
 }
 export interface DataInfo {
   name: string;

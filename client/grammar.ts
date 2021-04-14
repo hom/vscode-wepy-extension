@@ -8,6 +8,7 @@ const SCOPES: { [lang: string]: string } = {
   html: 'text.html.basic',
   pug: 'text.pug',
   haml: 'text.haml',
+  slim: 'text.slim',
   css: 'source.css',
   scss: 'source.css.scss',
   less: 'source.css.less',
@@ -22,7 +23,8 @@ const SCOPES: { [lang: string]: string } = {
   json: 'source.json',
   php: 'source.php',
   graphql: 'source.graphql',
-  liquid: 'text.html.liquid'
+  liquid: 'text.html.liquid',
+  xml: 'text.xml'
 };
 
 export function getGeneratedGrammar(grammarPath: string, customBlocks: { [k: string]: string }): string {

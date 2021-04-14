@@ -1,1 +1,0 @@
-<wxs module="${0}"></wxs>

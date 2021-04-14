@@ -4,7 +4,6 @@ import {
   SignatureHelp,
   Definition,
   TextEdit,
-  TextDocument,
   Diagnostic,
   DocumentLink,
   Range,
@@ -18,8 +17,12 @@ import {
   ColorInformation,
   Color,
   ColorPresentation,
-  Command
+  CodeAction,
+  WorkspaceEdit,
+  FoldingRange,
+  TextDocumentEdit
 } from 'vscode-languageserver-types';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 
 import { getLanguageModelCache, LanguageModelCache } from './languageModelCache';
 import { getVueDocumentRegions, VueDocumentRegions, LanguageId, LanguageRange } from './embeddedSupport';
@@ -28,32 +31,35 @@ import { getCSSMode, getSCSSMode, getLESSMode, getPostCSSMode } from '../modes/s
 import { getJavascriptMode } from '../modes/script/javascript';
 import { VueHTMLMode } from '../modes/template';
 import { getStylusMode } from '../modes/style/stylus';
-import { DocumentContext, RefactorAction } from '../types';
+import { DocumentContext, SemanticTokenData } from '../types';
 import { VueInfoService } from '../services/vueInfoService';
-import { DependencyService, State } from '../services/dependencyService';
+import { DependencyService } from '../services/dependencyService';
 import { nullMode } from '../modes/nullMode';
 import { getServiceHost, IServiceHost } from '../services/typescriptService/serviceHost';
-import { VLSFullConfig } from '../config';
 import { SassLanguageMode } from '../modes/style/sass/sassLanguageMode';
+import { getPugMode } from '../modes/pug';
+import { VCancellationToken } from '../utils/cancellationToken';
+import { createAutoImportSfcPlugin } from '../modes/plugins/autoImportSfcPlugin';
+import { EnvironmentService } from '../services/EnvironmentService';
+import { FileRename } from 'vscode-languageserver';
 
 export interface VLSServices {
+  dependencyService: DependencyService;
   infoService?: VueInfoService;
-  dependencyService?: DependencyService;
 }
 
 export interface LanguageMode {
   getId(): string;
-  configure?(options: VLSFullConfig): void;
   updateFileInfo?(doc: TextDocument): void;
 
-  doValidation?(document: TextDocument): Diagnostic[];
+  doValidation?(document: TextDocument, cancellationToken?: VCancellationToken): Promise<Diagnostic[]>;
   getCodeActions?(
     document: TextDocument,
     range: Range,
     formatParams: FormattingOptions,
     context: CodeActionContext
-  ): Command[];
-  getRefactorEdits?(doc: TextDocument, args: RefactorAction): Command;
+  ): CodeAction[];
+  doCodeActionResolve?(document: TextDocument, action: CodeAction): CodeAction;
   doComplete?(document: TextDocument, position: Position): CompletionList;
   doResolve?(document: TextDocument, item: CompletionItem): CompletionItem;
   doHover?(document: TextDocument, position: Position): Hover;
@@ -66,6 +72,9 @@ export interface LanguageMode {
   format?(document: TextDocument, range: Range, options: FormattingOptions): TextEdit[];
   findDocumentColors?(document: TextDocument): ColorInformation[];
   getColorPresentations?(document: TextDocument, color: Color, range: Range): ColorPresentation[];
+  getFoldingRanges?(document: TextDocument): FoldingRange[];
+  getRenameFileEdit?(renames: FileRename): TextDocumentEdit[];
+  getSemanticTokens?(document: TextDocument, range?: Range): SemanticTokenData[];
 
   onDocumentChanged?(filePath: string): void;
   onDocumentRemoved(document: TextDocument): void;
@@ -89,7 +98,8 @@ export class LanguageModes {
     stylus: nullMode,
     javascript: nullMode,
     typescript: nullMode,
-    tsx: nullMode
+    tsx: nullMode,
+    unknown: nullMode
   };
 
   private documentRegions: LanguageModelCache<VueDocumentRegions>;
@@ -105,47 +115,53 @@ export class LanguageModes {
     this.modelCaches.push(this.documentRegions);
   }
 
-  async init(workspacePath: string, services: VLSServices, globalSnippetDir?: string) {
-    let tsModule = await import('typescript');
-    if (services.dependencyService) {
-      const ts = services.dependencyService.getDependency('typescript');
-      if (ts && ts.state === State.Loaded) {
-        tsModule = ts.module;
-      }
-    }
+  async init(env: EnvironmentService, services: VLSServices, globalSnippetDir?: string) {
+    const tsModule = services.dependencyService.get('typescript').module;
 
     /**
-     * Documents where everything outside `<script>~ is replaced with whitespace
+     * Documents where everything outside `<script>` is replaced with whitespace
      */
     const scriptRegionDocuments = getLanguageModelCache(10, 60, document => {
       const vueDocument = this.documentRegions.refreshAndGet(document);
       return vueDocument.getSingleTypeDocument('script');
     });
-    this.serviceHost = getServiceHost(tsModule, workspacePath, scriptRegionDocuments);
+    this.serviceHost = getServiceHost(tsModule, env, scriptRegionDocuments);
+    const autoImportSfcPlugin = createAutoImportSfcPlugin(tsModule, services.infoService);
+    autoImportSfcPlugin.setGetTSScriptTarget(() => this.serviceHost.getComplierOptions().target);
+    autoImportSfcPlugin.setGetFilesFn(() =>
+      this.serviceHost.getFileNames().filter(fileName => fileName.endsWith('.vue'))
+    );
 
     const vueHtmlMode = new VueHTMLMode(
       tsModule,
       this.serviceHost,
+      env,
       this.documentRegions,
-      workspacePath,
+      autoImportSfcPlugin,
+      services.dependencyService,
       services.infoService
     );
+
     const jsMode = await getJavascriptMode(
       this.serviceHost,
+      env,
       this.documentRegions,
-      workspacePath,
-      services.infoService,
-      services.dependencyService
+      services.dependencyService,
+      env.getGlobalComponentInfos(),
+      services.infoService
     );
+    autoImportSfcPlugin.setGetConfigure(env.getConfig);
+    autoImportSfcPlugin.setGetJSResolve(jsMode.doResolve!);
 
-    this.modes['vue'] = getVueMode(workspacePath, globalSnippetDir);
+    this.modes['vue'] = getVueMode(env, globalSnippetDir);
     this.modes['vue-html'] = vueHtmlMode;
-    this.modes['css'] = getCSSMode(this.documentRegions);
-    this.modes['postcss'] = getPostCSSMode(this.documentRegions);
-    this.modes['scss'] = getSCSSMode(this.documentRegions);
-    this.modes['sass'] = new SassLanguageMode();
-    this.modes['less'] = getLESSMode(this.documentRegions);
-    this.modes['stylus'] = getStylusMode(this.documentRegions);
+    this.modes['pug'] = getPugMode(env, services.dependencyService);
+    this.modes['css'] = getCSSMode(env, this.documentRegions, services.dependencyService);
+    this.modes['postcss'] = getPostCSSMode(env, this.documentRegions, services.dependencyService);
+    this.modes['scss'] = getSCSSMode(env, this.documentRegions, services.dependencyService);
+    this.modes['sass'] = new SassLanguageMode(env);
+    this.modes['less'] = getLESSMode(env, this.documentRegions, services.dependencyService);
+    this.modes['stylus'] = getStylusMode(env, this.documentRegions, services.dependencyService);
     this.modes['javascript'] = jsMode;
     this.modes['typescript'] = jsMode;
     this.modes['tsx'] = jsMode;
@@ -153,7 +169,7 @@ export class LanguageModes {
 
   getModeAtPosition(document: TextDocument, position: Position): LanguageMode | undefined {
     const languageId = this.documentRegions.refreshAndGet(document).getLanguageAtPosition(position);
-    return this.modes[languageId];
+    return this.modes?.[languageId];
   }
 
   getAllLanguageModeRangesInDocument(document: TextDocument): LanguageModeRange[] {
@@ -202,7 +218,6 @@ export class LanguageModes {
     for (const mode in this.modes) {
       this.modes[<LanguageId>mode].dispose();
     }
-    delete this.modes;
     this.serviceHost.dispose();
   }
 }
