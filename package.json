@@ -1,10 +1,10 @@
 {
   "name": "wepy",
   "displayName": "Wepy",
-  "description": "Vue tooling for VS Code",
-  "author": "Pine Wu <octref@gmail.com>",
-  "icon": "asset/vue.png",
-  "version": "0.33.1",
+  "description": "Wepy tooling for VS Code",
+  "author": "ruxf <813935532@qq.com>",
+  "icon": "asset/wepy.png",
+  "version": "0.0.10",
   "publisher": "octref",
   "scripts": {
     "postinstall": "run-s install:*",
