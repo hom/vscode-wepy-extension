@@ -129,7 +129,7 @@ export class LanguageModes {
     const autoImportSfcPlugin = createAutoImportSfcPlugin(tsModule, services.infoService);
     autoImportSfcPlugin.setGetTSScriptTarget(() => this.serviceHost.getComplierOptions().target);
     autoImportSfcPlugin.setGetFilesFn(() =>
-      this.serviceHost.getFileNames().filter(fileName => fileName.endsWith('.vue'))
+      this.serviceHost.getFileNames().filter(fileName => fileName.endsWith('.wpy'))
     );
 
     const vueHtmlMode = new VueHTMLMode(

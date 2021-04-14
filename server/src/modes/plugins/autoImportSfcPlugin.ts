@@ -115,7 +115,7 @@ export function createAutoImportSfcPlugin(
       return getVueFiles()
         .filter(fileName => !childComponentsPath.includes(fileName))
         .map(fileName => {
-          let tagName = basename(fileName, '.vue');
+          let tagName = basename(fileName, '.wpy');
           if (config.vetur.completion.tagCasing === 'kebab') {
             tagName = kebabCase(tagName);
           }
