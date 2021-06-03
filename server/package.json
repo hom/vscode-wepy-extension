@@ -46,7 +46,7 @@
     "@types/read-pkg-up": "^6.0.0",
     "@types/resolve": "1.20.0",
     "bootstrap-vue-helper-json": "^1.1.1",
-    "codecov": "^3.8.1",
+    "codecov": "^3.8.2",
     "core-js": "^3.13.0",
     "element-helper-json": "^2.0.6",
     "fast-glob": "^3.2.5",
