@@ -37,7 +37,7 @@
     "@types/eslint": "7.2.13",
     "@types/eslint-scope": "^3.7.0",
     "@types/eslint-visitor-keys": "^1.0.0",
-    "@types/glob": "^7.1.3",
+    "@types/glob": "^7.2.0",
     "@types/js-beautify": "1.13.3",
     "@types/lodash": "^4.14.168",
     "@types/mocha": "^8.2.2",
