@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/vuejs/wepy/tree/master/server",
   "dependencies": {
-    "eslint": "^7.27.0",
+    "eslint": "^7.32.0",
     "eslint-plugin-vue": "^7.11.1",
     "prettier": "^2.6.2",
     "tslint": "6.1.3",
