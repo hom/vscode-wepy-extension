@@ -63,7 +63,7 @@
     "rollup": "^2.52.2",
     "sass-formatter": "^0.7.1",
     "source-map-support": "^0.5.19",
-    "stylus": "^0.54.8",
+    "stylus": "^0.59.0",
     "stylus-supremacy": "^2.15.0",
     "vscode-css-languageservice": "5.1.0",
     "vscode-emmet-helper": "2.6.4",
