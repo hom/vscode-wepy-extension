@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^7.2.0",
-    "vls": "^0.7.6"
+    "vls": "^0.8.5"
   },
   "scripts": {
     "compile": "rollup -c rollup.config.js",
